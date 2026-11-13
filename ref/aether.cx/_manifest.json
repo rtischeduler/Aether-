@@ -9,6 +9,72 @@
       "bytes": 13014
     },
     {
+      "url": "https://aether.cx/manifest.webmanifest",
+      "file": "ref/aether.cx/manifest.webmanifest",
+      "type": "application/manifest+json",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/manifest.json",
+      "file": "ref/aether.cx/manifest.json",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/site.webmanifest",
+      "file": "ref/aether.cx/site.webmanifest",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/sw.js",
+      "file": "ref/aether.cx/sw.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/service-worker.js",
+      "file": "ref/aether.cx/service-worker.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/robots.txt",
+      "file": "ref/aether.cx/robots.txt",
+      "type": "text/plain; charset=utf-8",
+      "bytes": 2743
+    },
+    {
+      "url": "https://aether.cx/sitemap.xml",
+      "file": "ref/aether.cx/sitemap.xml",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/config.js",
+      "file": "ref/aether.cx/config.js",
+      "type": "application/javascript",
+      "bytes": 899
+    },
+    {
+      "url": "https://aether.cx/ping.txt",
+      "file": "ref/aether.cx/ping.txt",
+      "type": "text/plain; charset=utf-8",
+      "bytes": 5
+    },
+    {
+      "url": "https://aether.cx/browserconfig.xml",
+      "file": "ref/aether.cx/browserconfig.xml",
+      "type": "application/xml",
+      "bytes": 246
+    },
+    {
+      "url": "https://aether.cx/404.html",
+      "file": "ref/aether.cx/404.html",
+      "type": "text/html; charset=utf-8",
+      "bytes": 13014
+    },
+    {
       "url": "https://aether.cx/favicon.ico?v=2",
       "file": "ref/aether.cx/favicon__5e1f15b6.ico",
       "type": "image/vnd.microsoft.icon",
@@ -261,12 +327,6 @@
       "bytes": 25474
     },
     {
-      "url": "https://aether.cx/config.js",
-      "file": "ref/aether.cx/config.js",
-      "type": "application/javascript",
-      "bytes": 899
-    },
-    {
       "url": "https://aether.cx/assets/index-Dbte-kKa.js",
       "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
       "type": "application/javascript",
@@ -363,16 +423,28 @@
       "bytes": 723
     },
     {
+      "url": "https://aether.cx/mstile-150x150.png",
+      "file": "ref/aether.cx/mstile-150x150.png",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
       "url": "https://aether.cx/assets/public/android-chrome-512x512.png",
       "file": "ref/aether.cx/assets/public/android-chrome-512x512.png",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/public/android-chrome-512x512.png",
+      "file": "ref/aether.cx/public/android-chrome-512x512.png",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/${e.poster}",
       "file": "ref/aether.cx/assets/${e.poster}",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/placeholder.png",
@@ -384,109 +456,145 @@
       "url": "https://aether.cx/assets/${e.backdrop}",
       "file": "ref/aether.cx/assets/${e.backdrop}",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/assets/externalSubtitles-BGHpiCT-.js",
       "file": "ref/aether.cx/assets/assets/externalSubtitles-BGHpiCT-.js",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/vendor-DTcQ0b48.js",
-      "file": "ref/aether.cx/assets/assets/vendor-DTcQ0b48.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/auth-BXStSppl.js",
-      "file": "ref/aether.cx/assets/assets/auth-BXStSppl.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/caption-parsing-CGJlIaGd.js",
-      "file": "ref/aether.cx/assets/assets/caption-parsing-CGJlIaGd.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/locales-7xY_oabk.js",
-      "file": "ref/aether.cx/assets/assets/locales-7xY_oabk.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/Icons-qr_oVF0t.js",
-      "file": "ref/aether.cx/assets/assets/Icons-qr_oVF0t.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/language-db-ZXh70LIB.js",
-      "file": "ref/aether.cx/assets/assets/language-db-ZXh70LIB.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/Icons-ybeVSQkp.css",
-      "file": "ref/aether.cx/assets/assets/Icons-ybeVSQkp.css",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/react-dom-_zbXVXIK.js",
-      "file": "ref/aether.cx/assets/assets/react-dom-_zbXVXIK.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/hls-xeo-W7rp.js",
-      "file": "ref/aether.cx/assets/assets/hls-xeo-W7rp.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/index-BbSZrEDU.js",
-      "file": "ref/aether.cx/assets/assets/index-BbSZrEDU.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/ChatService-DblrIM-w.js",
-      "file": "ref/aether.cx/assets/assets/ChatService-DblrIM-w.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/DeveloperPage-Dc3GV95y.js",
-      "file": "ref/aether.cx/assets/assets/DeveloperPage-Dc3GV95y.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/TestView-xuxwp-NJ.js",
-      "file": "ref/aether.cx/assets/assets/TestView-xuxwp-NJ.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/PlayerView-p0JSdIMD.js",
-      "file": "ref/aether.cx/assets/assets/PlayerView-p0JSdIMD.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
-    },
-    {
-      "url": "https://aether.cx/assets/assets/Settings-SQLaIATW.js",
-      "file": "ref/aether.cx/assets/assets/Settings-SQLaIATW.js",
-      "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/externalSubtitles-BGHpiCT-.js",
       "file": "ref/aether.cx/assets/externalSubtitles-BGHpiCT-.js",
       "type": "application/javascript",
       "bytes": 4661
+    },
+    {
+      "url": "https://aether.cx/assets/assets/vendor-DTcQ0b48.js",
+      "file": "ref/aether.cx/assets/assets/vendor-DTcQ0b48.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/auth-BXStSppl.js",
+      "file": "ref/aether.cx/assets/assets/auth-BXStSppl.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/caption-parsing-CGJlIaGd.js",
+      "file": "ref/aether.cx/assets/assets/caption-parsing-CGJlIaGd.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/locales-7xY_oabk.js",
+      "file": "ref/aether.cx/assets/assets/locales-7xY_oabk.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/Icons-qr_oVF0t.js",
+      "file": "ref/aether.cx/assets/assets/Icons-qr_oVF0t.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/language-db-ZXh70LIB.js",
+      "file": "ref/aether.cx/assets/assets/language-db-ZXh70LIB.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/Icons-ybeVSQkp.css",
+      "file": "ref/aether.cx/assets/assets/Icons-ybeVSQkp.css",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/react-dom-_zbXVXIK.js",
+      "file": "ref/aether.cx/assets/assets/react-dom-_zbXVXIK.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/hls-xeo-W7rp.js",
+      "file": "ref/aether.cx/assets/assets/hls-xeo-W7rp.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/assets/index-BbSZrEDU.js",
+      "file": "ref/aether.cx/assets/assets/index-BbSZrEDU.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/index-BbSZrEDU.js",
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "type": "application/javascript",
+      "bytes": 442583
+    },
+    {
+      "url": "https://aether.cx/assets/assets/ChatService-DblrIM-w.js",
+      "file": "ref/aether.cx/assets/assets/ChatService-DblrIM-w.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/ChatService-DblrIM-w.js",
+      "file": "ref/aether.cx/assets/ChatService-DblrIM-w.js",
+      "type": "application/javascript",
+      "bytes": 2454
+    },
+    {
+      "url": "https://aether.cx/assets/assets/DeveloperPage-Dc3GV95y.js",
+      "file": "ref/aether.cx/assets/assets/DeveloperPage-Dc3GV95y.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/DeveloperPage-Dc3GV95y.js",
+      "file": "ref/aether.cx/assets/DeveloperPage-Dc3GV95y.js",
+      "type": "application/javascript",
+      "bytes": 1379
+    },
+    {
+      "url": "https://aether.cx/assets/assets/TestView-xuxwp-NJ.js",
+      "file": "ref/aether.cx/assets/assets/TestView-xuxwp-NJ.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/TestView-xuxwp-NJ.js",
+      "file": "ref/aether.cx/assets/TestView-xuxwp-NJ.js",
+      "type": "application/javascript",
+      "bytes": 455
+    },
+    {
+      "url": "https://aether.cx/assets/assets/PlayerView-p0JSdIMD.js",
+      "file": "ref/aether.cx/assets/assets/PlayerView-p0JSdIMD.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/PlayerView-p0JSdIMD.js",
+      "file": "ref/aether.cx/assets/PlayerView-p0JSdIMD.js",
+      "type": "application/javascript",
+      "bytes": 15015
+    },
+    {
+      "url": "https://aether.cx/assets/assets/Settings-SQLaIATW.js",
+      "file": "ref/aether.cx/assets/assets/Settings-SQLaIATW.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/assets/Settings-SQLaIATW.js",
+      "file": "ref/aether.cx/assets/Settings-SQLaIATW.js",
+      "type": "application/javascript",
+      "bytes": 77422
     },
     {
       "url": "https://aether.cx/lightbar-images/snowflake.svg",
@@ -669,58 +777,22 @@
       "bytes": 833
     },
     {
-      "url": "https://aether.cx/ping.txt",
-      "file": "ref/aether.cx/ping.txt",
-      "type": "text/plain; charset=utf-8",
-      "bytes": 5
-    },
-    {
-      "url": "https://aether.cx/assets/index-BbSZrEDU.js",
-      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
-      "type": "application/javascript",
-      "bytes": 442583
-    },
-    {
       "url": "https://aether.cx/lightbar-images/dice.svg",
       "file": "ref/aether.cx/lightbar-images/dice.svg",
       "type": "image/svg+xml",
       "bytes": 744
     },
     {
-      "url": "https://aether.cx/assets/ChatService-DblrIM-w.js",
-      "file": "ref/aether.cx/assets/ChatService-DblrIM-w.js",
-      "type": "application/javascript",
-      "bytes": 2454
-    },
-    {
-      "url": "https://aether.cx/assets/DeveloperPage-Dc3GV95y.js",
-      "file": "ref/aether.cx/assets/DeveloperPage-Dc3GV95y.js",
-      "type": "application/javascript",
-      "bytes": 1379
-    },
-    {
-      "url": "https://aether.cx/assets/TestView-xuxwp-NJ.js",
-      "file": "ref/aether.cx/assets/TestView-xuxwp-NJ.js",
-      "type": "application/javascript",
-      "bytes": 455
-    },
-    {
-      "url": "https://aether.cx/assets/PlayerView-p0JSdIMD.js",
-      "file": "ref/aether.cx/assets/PlayerView-p0JSdIMD.js",
-      "type": "application/javascript",
-      "bytes": 15015
-    },
-    {
-      "url": "https://aether.cx/assets/Settings-SQLaIATW.js",
-      "file": "ref/aether.cx/assets/Settings-SQLaIATW.js",
-      "type": "application/javascript",
-      "bytes": 77422
-    },
-    {
       "url": "https://aether.cx/assets/forge/prime.worker.js",
       "file": "ref/aether.cx/assets/forge/prime.worker.js",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/forge/prime.worker.js",
+      "file": "ref/aether.cx/forge/prime.worker.js",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/flags/tokiPona.svg",
@@ -756,13 +828,13 @@
       "url": "https://aether.cx/assets/enterprise.js",
       "file": "ref/aether.cx/assets/enterprise.js",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/api.js",
       "file": "ref/aether.cx/assets/api.js",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/e",
@@ -2070,19 +2142,26 @@
       "url": "https://aether.cx/assets/ort-wasm-simd-threaded.jsep.mjs",
       "file": "ref/aether.cx/assets/ort-wasm-simd-threaded.jsep.mjs",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/ort-wasm-simd-threaded.mjs",
       "file": "ref/aether.cx/assets/ort-wasm-simd-threaded.mjs",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
     },
     {
       "url": "https://aether.cx/assets/vad.worklet.bundle.min.js",
       "file": "ref/aether.cx/assets/vad.worklet.bundle.min.js",
       "type": "text/html; charset=utf-8",
-      "bytes": 13014
+      "bytes": 12647
+    },
+    {
+      "url": "https://aether.cx/flags/Flag_of_Galicia.svg",
+      "file": "ref/aether.cx/flags/Flag_of_Galicia.svg",
+      "type": "text/html; charset=utf-8",
+      "bytes": 12647
     }
-  ]
+  ],
+  "missing": []
 }

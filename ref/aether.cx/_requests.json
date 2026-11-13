@@ -1,0 +1,644 @@
+{
+  "urls": {
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ--": 103,
+    "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092": 68,
+    "https://fontawesome.com": 38,
+    "https://fontawesome.com/license": 27,
+    "https://fontawesome.com/license/free": 11,
+    "https://postman-echo.com/get": 4,
+    "https://skips.pstream.mov/send": 3,
+    "http://www.apache.org/licenses/LICENSE-2.0": 3,
+    "http://purl.org/dc/elements/1.1/": 3,
+    "http://purl.org/dc/dcmitype/StillImage": 3,
+    "https://backend.raccoonunbutteredbagel.zip": 2,
+    "https://wp.aether.cx/": 2,
+    "https://just.raccoonunbutteredbagel.zip,https://justice.raccoonunbutteredbagel.zip": 2,
+    "https://docs.pstream.mov/extension": 2,
+    "https://pay.oxapay.com/14012909": 2,
+    "https://image.tmdb.org/t/p/w300${e.still_path}": 2,
+    "https://web.dev/cross-origin-isolation-guide/": 2,
+    "http://www.inkscape.org/": 2,
+    "http://creativecommons.org/ns#": 2,
+    "https://www.robotstxt.org/robotstxt.html": 1,
+    "https://apis.justwatch.com": 1,
+    "https://images.justwatch.com": 1,
+    "https://rentry.co/aetherdomains": 1,
+    "https://api.themoviedb.org/3/": 1,
+    "https://api.tmdb.org/3/": 1,
+    "https://image.tmdb.org/t/p/original${e.startsWith(": 1,
+    "https://image.tmdb.org/t/p/w342${e.startsWith(": 1,
+    "https://image.tmdb.org/t/p/original${d.file_path}": 1,
+    "https://image.tmdb.org/t/p/w185${e.startsWith(": 1,
+    "https://www.moviefone.com/feeds/movie-news.rss": 1,
+    "https://www.moviefone.com/feeds/tv-news.rss": 1,
+    "https://www.filmjabber.com/rss/rss-dvd-reviews.php": 1,
+    "https://screenrant.com/feed/": 1,
+    "https://www.darkhorizons.com/feed/": 1,
+    "https://simkl.com/oauth/authorize": 1,
+    "https://api.simkl.com": 1,
+    "https://api.trakt.tv": 1,
+    "https://fed-airdate.pstream.mov": 1,
+    "https://www.imdb.com/title/${e}/": 1,
+    "https://www.rottentomatoes.com/search?search=${encodeURIComponent(e.trim(": 1,
+    "https://www.rottentomatoes.com${f.url}": 1,
+    "https://image.tmdb.org/t/p/w300${Z.still_path}": 1,
+    "https://www.themoviedb.org/person/${o.id}": 1,
+    "https://www.themoviedb.org/person/${l.id}": 1,
+    "https://www.themoviedb.org/${n===": 1,
+    "https://www.imdb.com/title/${r}": 1,
+    "https://www.youtube.com/embed/${Y.key}": 1,
+    "https://hls-downloader.aether.cx/?url=${encodeURIComponent(r??": 1,
+    "https://hls-downloader.aether.cx/": 1,
+    "https://www.watchparty.me/create?video=${encodeURIComponent(r": 1,
+    "https://api.theintrodb.org/v3": 1,
+    "https://sub.wyzie.io": 1,
+    "https://image.tmdb.org/t/p/w342//4BMG9hk9NvSBeQvC82sVmVRK140.jpg": 1,
+    "https://alpha-charlott.github.io/video-openh264/Sintel_master.m3u8": 1,
+    "https://image.tmdb.org/t/p/w342${K.poster_path}": 1,
+    "https://image.tmdb.org/t/p/w342${p.poster_path}": 1,
+    "https://image.tmdb.org/t/p/original${ae.backdrop_path}": 1,
+    "https://image.tmdb.org/t/p/w342${_.poster_path}": 1,
+    "https://fembox.raccoonunbutteredbagel.zip/movie/557?ui=${e}": 1,
+    "https://api.real-debrid.com/rest/1.0/user": 1,
+    "https://ipapi.co/json/": 1,
+    "https://ipinfo.io/json": 1,
+    "https://docs.pstream.mov/proxy/deploy": 1,
+    "https://docs.pstream.mov/backend/deploy": 1,
+    "https://fembox.raccoonunbutteredbagel.zip/quota?ui=${e}": 1,
+    "https://player.vimeo.com/video/1059834885?h=c3ab398d42&badge=0&autopause=0&player_id=0&app_id=58479": 1,
+    "https://febbox.com": 1,
+    "https://real-debrid.com/": 1,
+    "https://store.wyzie.io/redeem": 1,
+    "https://trakt.tv/oauth/authorize?${m.toString(": 1,
+    "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd": 1,
+    "https://a": 1,
+    "https://a/c%20d?a=1&c=3": 1,
+    "https://a@b": 1,
+    "https://x": 1,
+    "https://bit.ly/3cXEKWf": 1,
+    "http://jedwatson.github.io/classnames": 1,
+    "http://fb.me/use-check-prop-types": 1,
+    "https://www.iso.org/standard/50707.html": 1,
+    "http://unicode.org/reports/tr35/#Unicode_Language_and_Locale_Identifiers": 1,
+    "https://www": 1,
+    "https://aomedia.org/emsg/ID3": 1,
+    "https://sub.wyzie.io/search?${l.toString(": 1,
+    "https://rest.opensubtitles.org/search/${s&&i?": 1,
+    "https://sub.vdrk.site/v1/tv/${a}/${s}/${i}": 1,
+    "https://sub.vdrk.site/v1/movie/${a}": 1,
+    "https://gemini.aether.mom/v1beta/models/gemini-2.5-flash-lite:streamGenerateContent": 1,
+    "https://${E}": 1,
+    "http://web.resource.org/cc/": 1,
+    "http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd": 1
+  },
+  "config": {
+    "BACKEND_URL": [
+      "https://backend.raccoonunbutteredbagel.zip"
+    ],
+    "CORS_PROXY_URL": [
+      "https://just.raccoonunbutteredbagel.zip,https://justice.raccoonunbutteredbagel.zip"
+    ],
+    "M3U8_PROXY_URL": [
+      "https://just.raccoonunbutteredbagel.zip,https://justice.raccoonunbutteredbagel.zip"
+    ],
+    "WATCHPARTY_URL": [
+      "https://wp.aether.cx/"
+    ]
+  },
+  "routes": {
+    "/discover": 8,
+    "/source": 7,
+    "/migration": 6,
+    "/onboarding": 6,
+    "/settings": 5,
+    "/media": 5,
+    "/captionsOverlay": 5,
+    "/captions": 5,
+    "/download": 5,
+    "/login": 4,
+    "/support": 4,
+    "/dev/video": 4,
+    "/watchparty": 4,
+    "/onboarding/proxy": 4,
+    "/bookmarks": 4,
+    "/about": 3,
+    "/sync/history/remove": 3,
+    "/media/${H}": 3,
+    "/onboarding/extension": 3,
+    "/captions/settingsOverlay": 3,
+    "/audio": 3,
+    "/sleeptimer": 3,
+    "/watchparty/chat": 3,
+    "/episodes": 3,
+    "/discover/${s}": 3,
+    "/register": 3,
+    "/oauth/token": 3,
+    "/media/tmdb-show": 2,
+    "/users/${s.userId}/group-order": 2,
+    "/users/${s.userId}/bookmarks": 2,
+    "/users/${s.userId}/settings": 2,
+    "/users/${s.userId}": 2,
+    "/legal": 2,
+    "/history": 2,
+    "/sync/history": 2,
+    "/users/${s}/lists": 2,
+    "/users/${s}/lists/${n}/items": 2,
+    "/scrobble/stop": 2,
+    "/browse/:query": 2,
+    "/m3u8-proxy": 2,
+    "/source/embeds": 2,
+    "/captions/translateSubtitle": 2,
+    "/captionsOverlay/translateSubtitle": 2,
+    "/captions/settings": 2,
+    "/download/pc": 2,
+    "/download/ios": 2,
+    "/download/android": 2,
+    "/quality": 2,
+    "/download/unable": 2,
+    "/playback": 2,
+    "/dev": 2,
+    "/movie/popular": 2,
+    "/discover/all": 2,
+    "/migration/direct": 2,
+    "/migration/download": 2,
+    "/migration/upload": 2,
+    "/admin": 2,
+    "/images": 2,
+    "/recommendations": 2,
+    "/group-order": 2,
+    "/lists": 2,
+    "/lists/${n}/items": 2,
+    "/metrics": 2,
+    "/scrape/source": 1,
+    "/scrape": 1,
+    "/scrape/embed": 1,
+    "/movie/${e}": 1,
+    "/tv/${e}": 1,
+    "/tv/${e}/season/${i.season_number}": 1,
+    "/collection/${e}": 1,
+    "/tv/${e}/season/${s}": 1,
+    "/find/${e}": 1,
+    "/movie/${e}/images": 1,
+    "/tv/${e}/images": 1,
+    "/content/titles/{type}/{id}/locale/${i}": 1,
+    "/content/titles/show_season/{id}/locale/${i}": 1,
+    "/media/JW": 1,
+    "/users/${s.userId}/bookmarks/${n.tmdbId}": 1,
+    "/users/${s.userId}/bookmarks/${n}": 1,
+    "/users/${s.userId}/progress/import": 1,
+    "/auth/login/start": 1,
+    "/auth/login/complete": 1,
+    "/users/${s.userId}/progress/${n.tmdbId}": 1,
+    "/users/${s.userId}/progress/${n}": 1,
+    "/auth/register/start": 1,
+    "/auth/register/complete": 1,
+    "/users/${s.userId}/sessions": 1,
+    "/sessions/${s.sessionId}": 1,
+    "/sessions/${n}": 1,
+    "/users/${s.userId}/progress": 1,
+    "/media/tmdb-tv-${p.tmdbId}/${p.seasonId}/${p.episodeId}": 1,
+    "/media/tmdb-movie-${p.tmdbId}": 1,
+    "/users/settings": 1,
+    "/sync/activities": 1,
+    "/sync/all-items": 1,
+    "/sync/add-to-list": 1,
+    "/users/me": 1,
+    "/sync/watchlist/${a}/rank/asc": 1,
+    "/sync/watchlist": 1,
+    "/sync/watchlist/remove": 1,
+    "/users/${s}/lists/${n}/items/remove": 1,
+    "/scrobble/start": 1,
+    "/scrobble/pause": 1,
+    "/sync/watched/movies": 1,
+    "/sync/watched/shows": 1,
+    "/sync/history/${r}": 1,
+    "/release/${e}": 1,
+    "/latest": 1,
+    "/latest4k": 1,
+    "/latesttv": 1,
+    "/appletv": 1,
+    "/applemovie": 1,
+    "/netflixmovies": 1,
+    "/netflixtv": 1,
+    "/primemovies": 1,
+    "/primetv": 1,
+    "/hulumovies": 1,
+    "/hulutv": 1,
+    "/disneymovies": 1,
+    "/disneytv": 1,
+    "/hbomovies": 1,
+    "/hbotv": 1,
+    "/paramountmovies": 1,
+    "/paramounttv": 1,
+    "/network/${e}": 1,
+    "/halloween": 1,
+    "/narrative": 1,
+    "/top": 1,
+    "/lifetime": 1,
+    "/never": 1,
+    "/LGBTQ": 1,
+    "/mindfuck": 1,
+    "/truestory": 1,
+    "/movie/${e}/release_dates": 1,
+    "/tv/${e}/content_ratings": 1,
+    "/media/${H}/${F.season.id}/${F.episode.id}": 1,
+    "/media/tmdb-movie-${U}": 1,
+    "/meta": 1,
+    "/external": 1,
+    "/captions/source/${T}": 1,
+    "/captionsOverlay/source/${T}": 1,
+    "/captions/external/${T}": 1,
+    "/captionsOverlay/external/${T}": 1,
+    "/captions/source/:languageName": 1,
+    "/captions/external/:languageName": 1,
+    "/captionsOverlay/source/:languageName": 1,
+    "/captionsOverlay/external/:languageName": 1,
+    "/media/tmdb-tv-${i.tmdbId}/${v}/${j}": 1,
+    "/genre/${e}/list": 1,
+    "/tv/on_the_air": 1,
+    "/movie/now_playing": 1,
+    "/trending/${s}/week": 1,
+    "/discover/tv": 1,
+    "/discover/more": 1,
+    "/media/tmdb-movie-${x.id}-random": 1,
+    "/movie/${Fe.id}": 1,
+    "/tv/popular": 1,
+    "/tv/${Fe.id}": 1,
+    "/movie/${Ve}": 1,
+    "/tv/${Ve}": 1,
+    "/discover/more/provider/${l.id}/${F}": 1,
+    "/discover/more/genre/${m.id}/${F}": 1,
+    "/discover/more/recommendations/${h}/${F}": 1,
+    "/vip": 1,
+    "/tv/${h}": 1,
+    "/s/:query": 1,
+    "/search/:type": 1,
+    "/browse": 1,
+    "/search/:type/:query": 1,
+    "/addproxy": 1,
+    "/noads": 1,
+    "/media/:media": 1,
+    "/media/:media/:season/:episode": 1,
+    "/jip": 1,
+    "/discover/more/:contentType/:mediaType": 1,
+    "/discover/more/:contentType/:id/:mediaType": 1,
+    "/discover/more/:category": 1,
+    "/metrics/providers": 1,
+    "/metrics/captcha": 1,
+    "/metadata": 1,
+    "/season/${i.season_number}": 1,
+    "/season/${s}": 1,
+    "/credits": 1,
+    "/similar": 1,
+    "/bookmarks/${n.tmdbId}": 1,
+    "/bookmarks/${n}": 1,
+    "/progress/import": 1,
+    "/progress/${n.tmdbId}": 1,
+    "/progress/${n}": 1,
+    "/sessions": 1,
+    "/progress": 1,
+    "/api/room/${encodeURIComponent": 1,
+    "/oauth/authorize": 1,
+    "/rank/asc": 1,
+    "/lists/${n}/items/remove": 1,
+    "/release_dates": 1,
+    "/content_ratings": 1,
+    "/vad": 1,
+    "/search": 1,
+    "/list": 1,
+    "/popular": 1,
+    "/top_rated": 1,
+    "/week": 1,
+    "/provider/${y}/${C}": 1,
+    "/genre/${v}/${C}": 1,
+    "/recommendations/${A}/${C}": 1,
+    "/recaptcha": 1,
+    "/mp4": 1,
+    "/dev/test": 1,
+    "/media/${E}${S}": 1,
+    "/media/${s.media}/${f.meta.seasonData.id}/${S.id}": 1,
+    "/media/${t.media}": 1
+  },
+  "calls": [
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "a.href,o"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "EventSource",
+      "args": "r.toString("
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "e,s?{...s,headers:r}:void 0"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "e.url"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "e"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${gp}&tl=${s}&q=${encodeURIComponent(e"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "xp,{method:\"POST\",signal:n,headers:{\"Content-Type\":\"application/json+protobuf\",\"X-goog-api-key\":bp},body:JSON.stringify([[e.map(o=>o.replace"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "r,\"_blank\",\"noreferrer\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${s}/api/room/${encodeURIComponent(e.trim("
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "WebSocket",
+      "args": "this.url"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "a,\"_blank\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "e"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "i,{method:\"POST\",headers:{\"Content-Type\":\"application/json\",\"trakt-api-version\":\"2\",\"trakt-api-key\":r.TRAKT_CLIENT_ID,Authorization:`Bearer "
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${Id}${e}`"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${Id}${r}`"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"/ping.txt\",{signal:o}"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${Dn}/metrics`"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`${Dn}/metrics`"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "g"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "h.url"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "h"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "g"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "P"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "\"/episodes\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"https://skips.pstream.mov/send\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"},body:JSON.stringify({start_time:f,end_time:p,ski"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"https://skips.pstream.mov/send\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"},body:JSON.stringify({start_time:e.startTime,end_"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"https://skips.pstream.mov/send\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"},body:JSON.stringify({start_time:g,end_time:f,ski"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "\"/watchparty/chat\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "e"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "o"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": ".open",
+      "args": "\"https://github.com/jipfr\",\"_blank\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "s"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"https://ipapi.co/json/\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "\"https://ipinfo.io/json\""
+    },
+    {
+      "file": "ref/aether.cx/assets/index-Dbte-kKa.js",
+      "call": "fetch",
+      "args": "`https://fembox.raccoonunbutteredbagel.zip/quota?ui=${e}`"
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": ".open",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": "fetch",
+      "args": "...c"
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": ".open",
+      "args": "y,Q,J"
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": "fetch",
+      "args": "c[r(_._0x5a71d2,_._0x262f64"
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": "fetch",
+      "args": "W[b(t._0x17ede4,t._0x448236"
+    },
+    {
+      "file": "ref/aether.cx/assets/vendor-DTcQ0b48.js",
+      "call": "fetch",
+      "args": "f,i"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": "fetch",
+      "args": ""
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": ".open",
+      "args": "\"POST\",t,!0"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": ".open",
+      "args": "\"POST\",t,!0"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": ".open",
+      "args": "\"POST\",t,!0"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": "fetch",
+      "args": "this.request"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": ".open",
+      "args": "\"GET\",t.url,!0"
+    },
+    {
+      "file": "ref/aether.cx/assets/hls-xeo-W7rp.js",
+      "call": ".open",
+      "args": "\"GET\",t.url,!0"
+    },
+    {
+      "file": "ref/aether.cx/assets/externalSubtitles-BGHpiCT-.js",
+      "call": "fetch",
+      "args": "c"
+    },
+    {
+      "file": "ref/aether.cx/assets/externalSubtitles-BGHpiCT-.js",
+      "call": "fetch",
+      "args": "n,{headers:{\"X-User-Agent\":\"VLSub 0.10.2\"}}"
+    },
+    {
+      "file": "ref/aether.cx/assets/externalSubtitles-BGHpiCT-.js",
+      "call": "fetch",
+      "args": "r"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "call": "fetch",
+      "args": "V"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "call": "fetch",
+      "args": "e,{credentials:\"same-origin\"}"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "call": "fetch",
+      "args": "e"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "call": "fetch",
+      "args": "c,{credentials:\"same-origin\"}"
+    },
+    {
+      "file": "ref/aether.cx/assets/index-BbSZrEDU.js",
+      "call": "fetch",
+      "args": "c"
+    },
+    {
+      "file": "ref/aether.cx/assets/ChatService-DblrIM-w.js",
+      "call": "fetch",
+      "args": "m.replace(\"streamGenerateContent\",\"generateContent\""
+    }
+  ]
+}
