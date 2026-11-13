@@ -204,19 +204,21 @@ const backendUrls = (u) => {
   return forceProxy ? [...px, u] : [u, ...px];
 };
 async function backendFetch(u, accept = "application/json", ms = 30000) {
-  let err;
+  const tried = [];
   for (const t of backendUrls(u)) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), ms);
     try {
       const r = await fetch(t, { headers: hdrs(t, u, accept), signal: ctl.signal });
       if (r.ok) { if (t !== u) forceProxy = true; return r; }
-      err = new Error("HTTP " + r.status);
+      let body = "";
+      try { body = (await r.text()).replace(/\s+/g, " ").slice(0, 80); } catch {}
+      tried.push((t === u ? "direct" : new URL(t).host) + ": HTTP " + r.status + (body ? " " + body : ""));
     } catch (e) {
-      err = e && e.name === "AbortError" ? new Error("Request timed out") : e;
+      tried.push((t === u ? "direct" : new URL(t).host) + ": " + (e && e.name === "AbortError" ? "timed out" : msgOf(e)));
     } finally { clearTimeout(timer); }
   }
-  throw err || new Error("No backend reachable");
+  throw new Error(tried.join(" | ") || "No backend reachable");
 }
 
 function parseSseBlock(block) {

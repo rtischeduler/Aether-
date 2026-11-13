@@ -929,7 +929,11 @@ const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent":
 
 async function pxJson(url, init, ms) {
   const r = await px(url, init, ms);
-  if (!r.ok) throw new Error("HTTP " + r.status);
+  if (!r.ok) {
+    let body = "";
+    try { body = (await r.text()).replace(/\s+/g, " ").slice(0, 120); } catch {}
+    throw new Error("HTTP " + r.status + " from " + url + (body ? " - " + body : ""));
+  }
   return withTimeout(r.json(), 30000, "Response");
 }
 
