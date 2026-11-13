@@ -578,20 +578,14 @@ const trim = (r, type) => ({
   overview: r.overview || "",
 });
 
-const HIDE_FROM = 2019;
-const CAP = `${HIDE_FROM - 1}-12-31`;
-const older = (it) => !it.year || Number(it.year) < HIDE_FROM;
-const capParams = (type) => (type === "movie" ? { "primary_release_date.lte": CAP } : { "first_air_date.lte": CAP });
-
 const listOf = (type, path, params = {}, pages = 1) =>
-  cached(`${type}:${path}:${JSON.stringify(params)}:${pages}:${HIDE_FROM}`, 30 * 60000, async () => {
+  cached(`all:${type}:${path}:${JSON.stringify(params)}:${pages}`, 30 * 60000, async () => {
     const ds = await Promise.all(Array.from({ length: pages }, (_, i) => tmdb(path, { ...params, page: String(i + 1) })));
     const seen = new Set();
     return ds
       .flatMap((d) => d.results || [])
       .filter((r) => r.poster_path && !seen.has(r.id) && seen.add(r.id))
-      .map((r) => trim(r, type))
-      .filter(older);
+      .map((r) => trim(r, type));
   });
 
 const itemOf = (type, id) => cached(`item:${type}:${id}`, 7 * 86400000, async () => trim(await tmdb(`/${type}/${id}`), type));
@@ -708,20 +702,20 @@ const plain = (type, title, path, params, pages) => ({ title, load: () => listOf
 const providerRow = (type) => ({
   title: (s) => `${typeLabel(type)} on ${s ? s.name : "…"}`,
   chips: async () => PROVIDERS[type],
-  load: (s) => listOf(type, `/discover/${type}`, { with_watch_providers: s.id, watch_region: "US", ...capParams(type) }),
+  load: (s) => listOf(type, `/discover/${type}`, { with_watch_providers: s.id, watch_region: "US" }),
 });
 
 const genreRow = (type) => ({
   title: (s) => (s ? `${s.name} ${typeLabel(type)}` : `${typeLabel(type)} by genre`),
   chips: async () => ((await tmdb(`/genre/${type}/list`)).genres || []).slice(0, 50).map((g) => ({ id: String(g.id), name: g.name })),
-  load: (s) => listOf(type, `/discover/${type}`, { with_genres: s.id, ...capParams(type) }),
+  load: (s) => listOf(type, `/discover/${type}`, { with_genres: s.id }),
 });
 
 let picked = null;
 async function picks(type) {
   picked ||= { movie: shuffle([...EDITOR.movie]).slice(0, 26), tv: shuffle([...EDITOR.tv]).slice(0, 26) };
   const res = await Promise.allSettled(picked[type].map((id) => itemOf(type, id)));
-  const out = res.filter((r) => r.status === "fulfilled" && r.value && r.value.poster && older(r.value)).map((r) => r.value).slice(0, 18);
+  const out = res.filter((r) => r.status === "fulfilled" && r.value && r.value.poster).map((r) => r.value).slice(0, 18);
   if (!out.length) throw new Error("No editor picks loaded");
   return out;
 }
@@ -737,14 +731,14 @@ function rowDefs(tab) {
   const base = type === "movie"
     ? [
         plain("movie", "Trending", "/trending/movie/week", {}, 3),
-        plain("movie", "Most Popular", "/discover/movie", { ...capParams("movie"), sort_by: "popularity.desc" }),
-        plain("movie", "Top Rated", "/discover/movie", { ...capParams("movie"), sort_by: "vote_average.desc", "vote_count.gte": "1000" }),
+        plain("movie", "Most Popular", "/discover/movie", { sort_by: "popularity.desc" }),
+        plain("movie", "Top Rated", "/discover/movie", { sort_by: "vote_average.desc", "vote_count.gte": "1000" }),
       ]
     : [
         plain("tv", "Trending", "/trending/tv/week", {}, 3),
-        plain("tv", "Top Rated", "/discover/tv", { ...capParams("tv"), sort_by: "vote_average.desc", "vote_count.gte": "500" }),
-        plain("tv", "Most Popular", "/discover/tv", { ...capParams("tv"), sort_by: "popularity.desc" }),
-        plain("tv", "K-Drama", "/discover/tv", { with_origin_country: "KR", with_original_language: "ko", ...capParams("tv") }),
+        plain("tv", "Top Rated", "/discover/tv", { sort_by: "vote_average.desc", "vote_count.gte": "500" }),
+        plain("tv", "Most Popular", "/discover/tv", { sort_by: "popularity.desc" }),
+        plain("tv", "K-Drama", "/discover/tv", { with_origin_country: "KR", with_original_language: "ko" }),
       ];
   return [...base, providerRow(type), genreRow(type)];
 }
@@ -758,7 +752,7 @@ function setBg(el, path, size) {
 
 async function heroFill(el, type) {
   try {
-    const items = (await listOf(type, `/discover/${type}`, { ...capParams(type), sort_by: "popularity.desc" })).filter((i) => i.backdrop);
+    const items = (await listOf(type, `/discover/${type}`, { sort_by: "popularity.desc" })).filter((i) => i.backdrop);
     if (!items.length) return;
     const it = items[(Math.random() * Math.min(items.length, 8)) | 0];
     const bg = h("div", { class: "hero-bg" });
