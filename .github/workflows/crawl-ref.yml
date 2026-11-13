@@ -48,6 +48,12 @@ jobs:
         run: |
           python scripts/crawl_ref.py
 
+      - name: Map the providers library exports (used by player.html)
+        continue-on-error: true
+        env:
+          CRAWL_URL: ${{ inputs.url || 'https://aether.cx' }}
+        run: python scripts/ref_providers.py
+
       - name: Commit ref/ to main
         env:
           CRAWL_URL: ${{ inputs.url || 'https://aether.cx' }}

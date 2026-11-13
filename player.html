@@ -193,86 +193,52 @@ async function resolveMedia(type, id, season, episode) {
 
 const setParams = (url, o) => { for (const [k, v] of Object.entries(o)) if (v) url.searchParams.set(k, v); return url; };
 
-let forceProxy = false;
-const viaProxy = (p, u) => `${p}/?destination=${encodeURIComponent(u)}`;
-// Backend sends 403 to direct cross-origin browser calls; the ref app goes through the CORS proxy (?destination=). Try direct, then each proxy, and remember what worked.
-// Proxies forward X-Origin/X-Referer as Origin/Referer; the backend 403s anything that does not look like aether.cx. (Only on proxied tries: custom headers on a direct call would force a failing CORS preflight.)
-const SPOOF = { "X-Origin": "https://aether.cx", "X-Referer": "https://aether.cx/" };
-const hdrs = (t, u, accept) => (t === u ? { accept } : { accept, ...SPOOF });
-const backendUrls = (u) => {
-  const px = cfg().proxies.map((p) => viaProxy(p, u));
-  return forceProxy ? [...px, u] : [u, ...px];
-};
-async function backendFetch(u, accept = "application/json", ms = 30000) {
-  const tried = [];
-  for (const t of backendUrls(u)) {
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), ms);
-    try {
-      const r = await fetch(t, { headers: hdrs(t, u, accept), signal: ctl.signal });
-      if (r.ok) { if (t !== u) forceProxy = true; return r; }
-      let body = "";
-      try { body = (await r.text()).replace(/\s+/g, " ").slice(0, 80); } catch {}
-      tried.push((t === u ? "direct" : new URL(t).host) + ": HTTP " + r.status + (body ? " " + body : ""));
-    } catch (e) {
-      tried.push((t === u ? "direct" : new URL(t).host) + ": " + (e && e.name === "AbortError" ? "timed out" : msgOf(e)));
-    } finally { clearTimeout(timer); }
-  }
-  throw new Error(tried.join(" | ") || "No backend reachable");
-}
+// Aether's own scraper: the providers library from Aether's vendor chunk (crawled into ref/), run in this browser.
+// Page requests go through the CORS proxies exactly like aether.cx does; no scrape backend is involved.
+const REF_BASES = [new URL("ref/aether.cx/", location.href).href, "https://cdn.jsdelivr.net/gh/rtischeduler/Aether-@main/ref/aether.cx/"];
+const DEFAULT_MAP = { file: "assets/vendor-DTcQ0b48.js", makeProviders: "aP", makeStandardFetcher: "aQ", targets: "aR", proxyFetcher: "aA" };
+let providersP = null;
 
-function parseSseBlock(block) {
-  let name = "message";
-  const data = [];
-  for (const line of block.split("\n")) {
-    if (line.startsWith("event:")) name = line.slice(6).trim();
-    else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
-  }
-  let v = {};
-  try { v = data.length ? JSON.parse(data.join("\n")) : {}; } catch {}
-  return { name, v, hasData: data.length > 0 };
-}
-
-async function sse(url, onUpdate, ms = 90000) {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), ms);
-  let err;
-  try {
-    for (const t of backendUrls(url)) {
+function getProviders() {
+  if (providersP) return providersP;
+  providersP = (async () => {
+    let lastErr;
+    for (const base of REF_BASES) {
       try {
-        const r = await fetch(t, { headers: hdrs(t, url, "text/event-stream"), signal: ctl.signal });
-        if (!r.ok) { err = new Error("Backend HTTP " + r.status); continue; }
-        if (t !== url) forceProxy = true;
-        const reader = r.body.getReader();
-        const dec = new TextDecoder();
-        let buf = "";
-        for (;;) {
-          const { done, value } = await reader.read();
-          buf += dec.decode(value || new Uint8Array(), { stream: !done }).replace(/\r\n?/g, "\n");
-          let i;
-          while ((i = buf.indexOf("\n\n")) >= 0) {
-            const b = parseSseBlock(buf.slice(0, i));
-            buf = buf.slice(i + 2);
-            if (b.name === "completed") return b.v;
-            if (b.name === "noOutput") return null;
-            if (b.name === "error") {
-              const e = new Error(b.hasData ? b.v.message || b.v.name || "scrape error" : "Scrape backend error");
-              e.fatal = true;
-              throw e;
-            }
-            if (onUpdate && ["init", "start", "update"].includes(b.name)) onUpdate(b.name, b.v);
+        let map = DEFAULT_MAP;
+        try { const r = await fetch(base + "providers.json", { cache: "no-cache" }); if (r.ok) map = await r.json(); } catch {}
+        const mod = await import(base + map.file);
+        const mk = mod[map.makeProviders], std = mod[map.makeStandardFetcher], tg = mod[map.targets], pxf = mod[map.proxyFetcher];
+        if (!mk || !std || !tg || !pxf) throw new Error("providers export map is out of date, re-run the Crawl ref workflow");
+        const f = (...a) => fetch(...a);
+        const proxied = async (url, ops) => {
+          const list = cfg().proxies;
+          if (!list.length) throw new Error("No CORS proxy set");
+          let err;
+          for (let i = 0; i < list.length; i++) {
+            const p = list[(proxyIdx + i) % list.length];
+            try { const r = await pxf(p, f)(url, ops); proxyIdx = (proxyIdx + i) % list.length; return r; } catch (e) { err = e; }
           }
-          if (done) break;
-        }
-        err = new Error("Scrape stream ended without a result");
-      } catch (e) {
-        if (e && e.fatal) throw e;
-        if (ctl.signal.aborted) throw new Error("Scrape timed out");
-        err = e;
-      }
+          throw err;
+        };
+        return mk({ fetcher: std(f), proxiedFetcher: proxied, target: tg.BROWSER });
+      } catch (e) { lastErr = e; }
     }
-  } finally { clearTimeout(timer); ctl.abort(); }
-  throw err || new Error("Could not connect to the scrape backend");
+    throw new Error("Could not load Aether's providers library: " + msgOf(lastErr));
+  })();
+  providersP.catch(() => { providersP = null; });
+  return providersP;
+}
+
+// resolveMedia() gives flat strings; the library wants nested numbers.
+function toLibMedia(m) {
+  const base = { title: m.title, releaseYear: Number(m.releaseYear), tmdbId: m.tmdbId, imdbId: m.imdbId };
+  if (m.type === "movie") return { type: "movie", ...base };
+  return {
+    type: "show", ...base,
+    season: { number: Number(m.seasonNumber), tmdbId: m.seasonTmdbId },
+    episode: { number: Number(m.episodeNumber), tmdbId: m.episodeTmdbId },
+  };
 }
 
 const hlsUrl = (u, headers) => {
@@ -476,11 +442,8 @@ async function loadSources(type) {
   const list = $("srclist");
   note.textContent = "";
   try {
-    const r = await backendFetch(cfg().backend + "/metadata");
-    const all = (await r.json());
-    const flat = (Array.isArray(all) ? all.flat(3) : []).filter((m) => m && m.id);
-    const hasType = flat.some((m) => m.type);
-    sources = flat.filter((m) => (hasType ? m.type === "source" : true) && srcSupports(m, type));
+    const P = await getProviders();
+    sources = P.listSources().filter((m) => srcSupports(m, type));
     sources.sort((a, b) => (b.rank || 0) - (a.rank || 0));
   } catch (e) {
     sources = [];
@@ -489,7 +452,7 @@ async function loadSources(type) {
     return;
   }
   if (!sources.length) {
-    list.replaceChildren(Object.assign(document.createElement("span"), { className: "dim", textContent: "Backend returned no sources." }));
+    list.replaceChildren(Object.assign(document.createElement("span"), { className: "dim", textContent: "No sources available." }));
     return;
   }
   note.textContent = sources.length + " available";
@@ -530,8 +493,8 @@ async function runEmbed(em, sourceName, btn) {
   btn.className = "chip run";
   log("Scraping embed " + em.embedId + "…");
   try {
-    const url = setParams(new URL(cfg().backend + "/scrape/embed"), { id: em.embedId, url: em.url });
-    const r = await sse(url.toString());
+    const P = await getProviders();
+    const r = await P.runEmbedScraper({ id: em.embedId, url: em.url });
     const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
     if (!st) throw new Error("No stream from " + em.embedId);
     playStream(st, sourceName + " → " + em.embedId);
@@ -549,8 +512,8 @@ async function runSource(s, btn) {
   $("embedhead").style.display = "none";
   log("Scraping source " + (s.name || s.id) + "…");
   try {
-    const url = mediaQuery(new URL(cfg().backend + "/scrape/source"), { id: s.id });
-    const r = await sse(url.toString());
+    const P = await getProviders();
+    const r = await P.runSourceScraper({ id: s.id, media: toLibMedia(media) });
     if (!r) throw new Error("no output");
     const st = Array.isArray(r.stream) ? r.stream[0] : r.stream;
     if (st) {
@@ -575,14 +538,14 @@ $("auto").onclick = async () => {
   b.disabled = true;
   log("Trying all sources…");
   try {
-    const url = mediaQuery(new URL(cfg().backend + "/scrape"), {});
-    const r = await sse(url.toString(), (n, d) => {
+    const P = await getProviders();
+    const r = await P.runAll({ media: toLibMedia(media), events: { update: (d) => ((n, d) => {
       if (n === "update" && d && d.id) {
         const chip = document.querySelector(`#srclist .chip[data-id="${CSS.escape(d.id)}"]`);
         if (chip) chip.className = "chip " + (d.status === "success" ? "ok" : d.status === "failure" || d.status === "notfound" ? "bad" : "run");
         log((d.id || "?") + ": " + (d.status || "update"));
       }
-    }, 180000);
+    })("update", d) } });
     const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
     if (!st) throw new Error("no source produced a stream");
     const name = [r.sourceId, r.embedId].filter(Boolean).join(" → ");
