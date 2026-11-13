@@ -196,6 +196,9 @@ const setParams = (url, o) => { for (const [k, v] of Object.entries(o)) if (v) u
 let forceProxy = false;
 const viaProxy = (p, u) => `${p}/?destination=${encodeURIComponent(u)}`;
 // Backend sends 403 to direct cross-origin browser calls; the ref app goes through the CORS proxy (?destination=). Try direct, then each proxy, and remember what worked.
+// Proxies forward X-Origin/X-Referer as Origin/Referer; the backend 403s anything that does not look like aether.cx. (Only on proxied tries: custom headers on a direct call would force a failing CORS preflight.)
+const SPOOF = { "X-Origin": "https://aether.cx", "X-Referer": "https://aether.cx/" };
+const hdrs = (t, u, accept) => (t === u ? { accept } : { accept, ...SPOOF });
 const backendUrls = (u) => {
   const px = cfg().proxies.map((p) => viaProxy(p, u));
   return forceProxy ? [...px, u] : [u, ...px];
@@ -206,7 +209,7 @@ async function backendFetch(u, accept = "application/json", ms = 30000) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), ms);
     try {
-      const r = await fetch(t, { headers: { accept }, signal: ctl.signal });
+      const r = await fetch(t, { headers: hdrs(t, u, accept), signal: ctl.signal });
       if (r.ok) { if (t !== u) forceProxy = true; return r; }
       err = new Error("HTTP " + r.status);
     } catch (e) {
@@ -235,7 +238,7 @@ async function sse(url, onUpdate, ms = 90000) {
   try {
     for (const t of backendUrls(url)) {
       try {
-        const r = await fetch(t, { headers: { accept: "text/event-stream" }, signal: ctl.signal });
+        const r = await fetch(t, { headers: hdrs(t, url, "text/event-stream"), signal: ctl.signal });
         if (!r.ok) { err = new Error("Backend HTTP " + r.status); continue; }
         if (t !== url) forceProxy = true;
         const reader = r.body.getReader();

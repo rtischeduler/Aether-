@@ -924,6 +924,9 @@ const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).rep
 const QORDER = (k) => (k === "4k" ? 2160 : k === "unknown" ? 0 : parseInt(k, 10) || 1);
 const player = { hls: null, video: null, ui: null, quals: null, qHeaders: {}, caps: [], note: () => {} };
 
+// The backend 403s requests that do not look like they came from aether.cx, so send the same Origin/Referer/UA the real site does.
+const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent": navigator.userAgent });
+
 async function pxJson(url, init, ms) {
   const r = await px(url, init, ms);
   if (!r.ok) throw new Error("HTTP " + r.status);
@@ -931,7 +934,7 @@ async function pxJson(url, init, ms) {
 }
 
 async function pxSse(url, onUpdate, ms = 90000) {
-  const r = await px(url, { headers: { accept: "text/event-stream" } }, 30000);
+  const r = await px(url, { headers: { accept: "text/event-stream", ...backendHeaders() } }, 30000);
   if (!r.ok) throw new Error("Backend HTTP " + r.status);
   const parseBlock = (block) => {
     let name = "message";
@@ -1192,7 +1195,7 @@ function sourceMeta() {
   const base = backendBase();
   if (metaPromise && metaFor === base) return metaPromise;
   metaFor = base;
-  metaPromise = pxJson(base + "/metadata", { headers: { accept: "application/json" } }, 30000).catch((e) => { metaPromise = null; throw e; });
+  metaPromise = pxJson(base + "/metadata", { headers: { accept: "application/json", ...backendHeaders() } }, 30000).catch((e) => { metaPromise = null; throw e; });
   return metaPromise;
 }
 
