@@ -887,14 +887,7 @@ function footer() {
         openDetails(m[1] ? "tv" : "movie", m[2], true);
       },
     }, "Play by TMDB id"),
-    h("button", {
-      type: "button",
-      onclick: () => {
-        const v = prompt("Source scrape backend URL. Leave empty to use the default.", store.get("AE_BACKEND") || "");
-        if (v === null) return;
-        store.set("AE_BACKEND", v.trim().replace(/\/+$/, ""));
-      },
-    }, "Set source backend"));
+  );
 }
 
 const currentTab = () => {
@@ -919,80 +912,10 @@ function render() {
   window.scrollTo(0, 0);
 }
 
-const BACKEND_DEFAULT = "https://backend.raccoonunbutteredbagel.zip";
-const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).replace(/\/+$/, "");
 const QORDER = (k) => (k === "4k" ? 2160 : k === "unknown" ? 0 : parseInt(k, 10) || 1);
 const player = { hls: null, video: null, ui: null, quals: null, qHeaders: {}, caps: [], note: () => {} };
 
-// The backend 403s requests that do not look like they came from aether.cx, so send the same Origin/Referer/UA the real site does.
-const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent": navigator.userAgent });
 
-async function pxJson(url, init, ms) {
-  const r = await px(url, init, ms);
-  if (!r.ok) {
-    let body = "";
-    try { body = (await r.text()).replace(/\s+/g, " ").slice(0, 120); } catch {}
-    throw new Error("HTTP " + r.status + " from " + url + (body ? " - " + body : ""));
-  }
-  return withTimeout(r.json(), 30000, "Response");
-}
-
-async function pxSse(url, onUpdate, ms = 90000) {
-  const r = await px(url, { headers: { accept: "text/event-stream", ...backendHeaders() } }, 30000);
-  if (!r.ok) throw new Error("Backend HTTP " + r.status);
-  const parseBlock = (block) => {
-    let name = "message";
-    const data = [];
-    for (const line of block.split("\n")) {
-      if (line.startsWith("event:")) name = line.slice(6).trim();
-      else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
-    }
-    let v = {};
-    try { v = data.length ? JSON.parse(data.join("\n")) : {}; } catch {}
-    return { name, v, hasData: data.length > 0 };
-  };
-  const handle = (b) => {
-    if (b.name === "completed") return { value: b.v };
-    if (b.name === "noOutput") return { value: null };
-    if (b.name === "error") throw new Error(b.hasData ? b.v.message || b.v.name || "scrape error" : "Scrape backend error");
-    if (onUpdate && (b.name === "update" || b.name === "start" || b.name === "init")) onUpdate(b.name, b.v);
-    return null;
-  };
-  const run = async () => {
-    if (r.body && r.body.getReader) {
-      const rd = r.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-      try {
-        for (;;) {
-          const { value, done } = await rd.read();
-          if (value) buf += dec.decode(value, { stream: true });
-          buf = buf.replace(/\r\n/g, "\n");
-          let i;
-          while ((i = buf.indexOf("\n\n")) !== -1) {
-            const out = handle(parseBlock(buf.slice(0, i)));
-            buf = buf.slice(i + 2);
-            if (out) return out.value;
-          }
-          if (done) break;
-        }
-      } finally { try { rd.cancel(); } catch {} }
-      if (buf.trim()) {
-        const out = handle(parseBlock(buf));
-        if (out) return out.value;
-      }
-      throw new Error("Stream ended without a result");
-    }
-    const text = (await r.text()).replace(/\r\n/g, "\n");
-    for (const block of text.split("\n\n")) {
-      if (!block.trim()) continue;
-      const out = handle(parseBlock(block));
-      if (out) return out.value;
-    }
-    throw new Error("Stream ended without a result");
-  };
-  return withTimeout(run(), ms, "Scrape");
-}
 
 let hlsReady = null;
 function loadHls() {
@@ -1194,22 +1117,50 @@ const setParams = (url, o) => {
   return url;
 };
 
-let metaPromise = null, metaFor = "";
-function sourceMeta() {
-  const base = backendBase();
-  if (metaPromise && metaFor === base) return metaPromise;
-  metaFor = base;
-  metaPromise = pxJson(base + "/metadata", { headers: { accept: "application/json", ...backendHeaders() } }, 30000).catch((e) => { metaPromise = null; throw e; });
-  return metaPromise;
+
+// Aether's own scraper: the providers library from Aether's vendor chunk (crawled into ref/), run in this page.
+// Requests go through the libcurl/wisp proxy above (unrestricted headers), so the NATIVE target applies.
+const REF_BASES = [new URL("ref/aether.cx/", location.href).href, "https://cdn.jsdelivr.net/gh/rtischeduler/Aether-@main/ref/aether.cx/"];
+const DEFAULT_MAP = { file: "assets/vendor-DTcQ0b48.js", makeProviders: "aP", makeStandardFetcher: "aQ", targets: "aR", proxyFetcher: "aA" };
+let providersP = null;
+
+function getProviders() {
+  if (providersP) return providersP;
+  providersP = (async () => {
+    let lastErr;
+    for (const base of REF_BASES) {
+      try {
+        let map = DEFAULT_MAP;
+        try { const r = await fetch(base + "providers.json", { cache: "no-cache" }); if (r.ok) map = await r.json(); } catch {}
+        const mod = await import(base + map.file);
+        const mk = mod[map.makeProviders], std = mod[map.makeStandardFetcher], tg = mod[map.targets];
+        if (!mk || !std || !tg) throw new Error("providers export map is out of date, re-run the Crawl ref workflow");
+        const f = (u, init) => px(u, init, 60000);
+        return mk({ fetcher: std(f), proxiedFetcher: std(f), target: tg.NATIVE });
+      } catch (e) { lastErr = e; }
+    }
+    throw new Error("Could not load Aether's providers library: " + msgOf(lastErr));
+  })();
+  providersP.catch(() => { providersP = null; });
+  return providersP;
+}
+
+// getMedia() gives flat strings; the library wants nested numbers.
+function toLibMedia(m) {
+  const base = { title: m.title, releaseYear: Number(m.releaseYear), tmdbId: m.tmdbId, imdbId: m.imdbId };
+  if (m.type === "movie") return { type: "movie", ...base };
+  return {
+    type: "show", ...base,
+    season: { number: Number(m.seasonNumber), tmdbId: m.seasonTmdbId },
+    episode: { number: Number(m.episodeNumber), tmdbId: m.episodeTmdbId },
+  };
 }
 
 async function listSources(type) {
-  const all = await sourceMeta();
-  const flat = (Array.isArray(all) ? all.flat(3) : []).filter((m) => m && m.id);
-  const typed = flat.some((m) => m.type);
+  const P = await getProviders();
   const want = type === "movie" ? "movie" : "show";
-  return flat
-    .filter((m) => (!typed || m.type === "source") && (!Array.isArray(m.mediaTypes) || m.mediaTypes.includes(want)))
+  return P.listSources()
+    .filter((m) => !Array.isArray(m.mediaTypes) || m.mediaTypes.includes(want))
     .sort((a, b) => (b.rank || 0) - (a.rank || 0));
 }
 
@@ -1288,8 +1239,8 @@ async function startPlayer(type, d, stage) {
     btn.className = "pchip run";
     player.note("Scraping embed " + em.embedId + "…");
     try {
-      const url = setParams(new URL(backendBase() + "/scrape/embed"), { id: em.embedId, url: em.url });
-      const r = await pxSse(url.toString());
+      const P = await getProviders();
+      const r = await P.runEmbedScraper({ id: em.embedId, url: em.url });
       const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
       if (!st) throw new Error("no stream from " + em.embedId);
       await playStream(st, name + " → " + em.embedId);
@@ -1307,8 +1258,8 @@ async function startPlayer(type, d, stage) {
     const name = s.name || s.id;
     player.note("Scraping " + name + "…");
     try {
-      const url = setParams(new URL(backendBase() + "/scrape/source"), { ...getMedia(), id: s.id });
-      const r = await pxSse(url.toString());
+      const P = await getProviders();
+      const r = await P.runSourceScraper({ id: s.id, media: toLibMedia(getMedia()) });
       if (!r) throw new Error("no output");
       const st = Array.isArray(r.stream) ? r.stream[0] : r.stream;
       if (st) {
@@ -1331,13 +1282,13 @@ async function startPlayer(type, d, stage) {
     autoBtn.disabled = true;
     player.note("Trying all sources…");
     try {
-      const url = setParams(new URL(backendBase() + "/scrape"), getMedia());
-      const r = await pxSse(url.toString(), (n, v) => {
+      const P = await getProviders();
+      const r = await P.runAll({ media: toLibMedia(getMedia()), events: { update: (v) => ((n, v) => {
         if (n !== "update" || !v || !v.id) return;
         const c = srcBox.querySelector(`[data-id="${CSS.escape(v.id)}"]`);
         if (c) c.className = "pchip " + (v.status === "success" ? "ok" : v.status === "failure" || v.status === "notfound" ? "bad" : "run");
         player.note(v.id + ": " + (v.status || "working"));
-      }, 180000);
+      })("update", v) } });
       const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
       if (!st) throw new Error("no source produced a stream");
       await playStream(st, [r.sourceId, r.embedId].filter(Boolean).join(" → ") || "Auto");
