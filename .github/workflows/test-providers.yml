@@ -1,0 +1,58 @@
+name: Test providers
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "movie or show"
+        default: "movie"
+      title:
+        description: "Movie title"
+        default: "Fight Club"
+      year:
+        description: "Release year"
+        default: "1999"
+      tmdb:
+        description: "TMDB id"
+        default: "550"
+      imdb:
+        description: "IMDb id"
+        default: "tt0137523"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: test-providers
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run every source (native + via CORS proxies)
+        env:
+          TYPE: ${{ inputs.type || 'movie' }}
+          TITLE: ${{ inputs.title || 'Fight Club' }}
+          YEAR: ${{ inputs.year || '1999' }}
+          TMDB: ${{ inputs.tmdb || '550' }}
+          IMDB: ${{ inputs.imdb || 'tt0137523' }}
+        run: node scripts/test_providers.mjs
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f ref/_provider_test.json || true
+          if git diff --cached --quiet; then echo "No report"; else
+            git commit -m "Provider test report"
+            git pull --rebase origin main
+            git push origin main
+          fi
