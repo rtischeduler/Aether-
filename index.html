@@ -536,6 +536,74 @@ async function getToken() {
   return (token = k[1]);
 }
 
+const FEM = "https://fembox.raccoonunbutteredbagel.zip";
+const sess = {
+  get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { if (v == null || v === "") sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let febToken = String(sess.get("AE_FEBBOX") || "");
+
+async function femFetch(path) {
+  const url = FEM + path;
+  try {
+    return await withTimeout(fetch(url, { headers: { accept: "application/json" } }), 20000, "Request");
+  } catch (e) {
+    return px(url, { headers: { accept: "application/json" } }, 20000);
+  }
+}
+
+async function febboxStreams(tmdbId, t = febToken) {
+  if (!t) throw new Error("No Febbox token set. Add one with the link at the bottom.");
+  const r = await femFetch("/movie/" + encodeURIComponent(tmdbId) + "?ui=" + encodeURIComponent(t));
+  if (r.status === 502 || r.status === 503) throw new Error("Febbox API is down");
+  if (!r.ok) throw new Error("Febbox HTTP " + r.status);
+  const d = await withTimeout(r.json(), 20000, "Response");
+  const list = d && (d.links || d.sources);
+  if (!Array.isArray(list)) throw new Error("Unexpected Febbox response");
+  return list;
+}
+
+async function checkFebbox(t) {
+  for (let i = 0; i < 2; i++) {
+    try {
+      await febboxStreams(557, t);
+      return "ok";
+    } catch (e) {
+      if (/down/.test(msgOf(e))) return "api_down";
+      if (i === 0) await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  return "invalid";
+}
+
+function setFebboxToken(raw) {
+  const t = String(raw || "").trim().replace(/^ui=/i, "").replace(/^["']|["']$/g, "");
+  febToken = t;
+  sess.set("AE_FEBBOX", t);
+  return t;
+}
+
+async function promptFebbox(btn) {
+  const v = prompt("Paste your Febbox 'ui' cookie value (febbox.com > DevTools > Application > Cookies > ui). It is kept only for this browser session. Leave empty to clear.", febToken);
+  if (v === null) return;
+  const t = setFebboxToken(v);
+  if (!t) {
+    btn.textContent = "Set Febbox token";
+    return;
+  }
+  btn.textContent = "Checking Febbox token…";
+  const res = await checkFebbox(t);
+  if (res === "ok") {
+    btn.textContent = "Febbox token set";
+  } else {
+    btn.textContent = "Set Febbox token";
+    if (res === "invalid") setFebboxToken("");
+    alert(res === "api_down" ? "Cannot reach the Febbox API right now. The token was kept for this session, try again later." : "Failed to fetch a stream. That token looks invalid.");
+    if (res === "api_down") btn.textContent = "Febbox token set (unverified)";
+  }
+}
+window.__febboxStreams = febboxStreams;
+
 const mem = new Map();
 const apiLimit = limiter(6);
 function tmdb(path, params = {}) {
@@ -796,7 +864,11 @@ function footer() {
         store.set("AE_TMDB_AUTO", null);
         location.reload();
       },
-    }, "Use my own TMDB token"));
+    }, "Use my own TMDB token"),
+    h("button", {
+      type: "button",
+      onclick: (e) => promptFebbox(e.currentTarget),
+    }, febToken ? "Febbox token set" : "Set Febbox token"));
 }
 
 const currentTab = () => {
