@@ -104,6 +104,18 @@ footer button{text-decoration:underline;color:var(--dim)}
 .mvideo{width:100%;max-height:70vh;background:#000;border-radius:12px}
 .pnote{color:var(--dim);font-size:.9rem}
 .pnote.err{color:var(--danger)}
+.pbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.psel{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:100%}
+.phead{font-weight:700;font-size:.92rem;margin-top:6px}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{font:inherit;font-size:.86rem;font-weight:600;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer}
+.pchip:hover{border-color:var(--acc)}
+.pchip:disabled{opacity:.5;cursor:default}
+.pchip.run{border-color:var(--acc)}
+.pchip.ok{border-color:#7be0a4;color:#7be0a4}
+.pchip.bad{border-color:var(--danger);color:var(--danger)}
+.pchip.on{background:var(--acc);color:#14102a;border-color:var(--acc)}
+.pnow{font-size:.82rem;color:var(--dim)}
 @media (max-width:560px){.mbody{flex-direction:column;margin-top:-50px}.minfo{padding-top:0}.mposter{width:110px}}
 @media (prefers-reduced-motion:reduce){.spin,.poster{animation:none}.hero-bg{transition:none}}
 </style>
@@ -544,12 +556,8 @@ const sess = {
 let febToken = String(sess.get("AE_FEBBOX") || "");
 
 async function femFetch(path) {
-  const url = FEM + path;
-  try {
-    return await withTimeout(fetch(url, { headers: { accept: "application/json" } }), 20000, "Request");
-  } catch (e) {
-    return px(url, { headers: { accept: "application/json" } }, 20000);
-  }
+  const base = String(store.get("AE_FEMHOST") || FEM).replace(/\/+$/, "");
+  return px(base + path, { headers: { accept: "application/json" } }, 25000);
 }
 
 async function febboxStreams(tmdbId, t = febToken) {
@@ -868,7 +876,25 @@ function footer() {
     h("button", {
       type: "button",
       onclick: (e) => promptFebbox(e.currentTarget),
-    }, febToken ? "Febbox token set" : "Set Febbox token"));
+    }, febToken ? "Febbox token set" : "Set Febbox token"),
+    h("button", {
+      type: "button",
+      onclick: () => {
+        const v = prompt("Play by TMDB id. Enter a movie id like 557, or tv:1396 for a show.", "");
+        if (!v) return;
+        const m = v.trim().toLowerCase().match(/^(tv:)?\s*(\d+)$/);
+        if (!m) { alert("That is not a valid id."); return; }
+        openDetails(m[1] ? "tv" : "movie", m[2], true);
+      },
+    }, "Play by TMDB id"),
+    h("button", {
+      type: "button",
+      onclick: () => {
+        const v = prompt("Source scrape backend URL. Leave empty to use the default.", store.get("AE_BACKEND") || "");
+        if (v === null) return;
+        store.set("AE_BACKEND", v.trim().replace(/\/+$/, ""));
+      },
+    }, "Set source backend"));
 }
 
 const currentTab = () => {
@@ -893,20 +919,533 @@ function render() {
   window.scrollTo(0, 0);
 }
 
+const BACKEND_DEFAULT = "https://backend.raccoonunbutteredbagel.zip";
+const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).replace(/\/+$/, "");
+const QORDER = (k) => (k === "4k" ? 2160 : k === "unknown" ? 0 : parseInt(k, 10) || 1);
+const player = { hls: null, video: null, ui: null, quals: null, qHeaders: {}, caps: [], note: () => {} };
+
+async function pxJson(url, init, ms) {
+  const r = await px(url, init, ms);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return withTimeout(r.json(), 30000, "Response");
+}
+
+async function pxSse(url, onUpdate, ms = 90000) {
+  const r = await px(url, { headers: { accept: "text/event-stream" } }, 30000);
+  if (!r.ok) throw new Error("Backend HTTP " + r.status);
+  const parseBlock = (block) => {
+    let name = "message";
+    const data = [];
+    for (const line of block.split("\n")) {
+      if (line.startsWith("event:")) name = line.slice(6).trim();
+      else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
+    }
+    let v = {};
+    try { v = data.length ? JSON.parse(data.join("\n")) : {}; } catch {}
+    return { name, v, hasData: data.length > 0 };
+  };
+  const handle = (b) => {
+    if (b.name === "completed") return { value: b.v };
+    if (b.name === "noOutput") return { value: null };
+    if (b.name === "error") throw new Error(b.hasData ? b.v.message || b.v.name || "scrape error" : "Scrape backend error");
+    if (onUpdate && (b.name === "update" || b.name === "start" || b.name === "init")) onUpdate(b.name, b.v);
+    return null;
+  };
+  const run = async () => {
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      try {
+        for (;;) {
+          const { value, done } = await rd.read();
+          if (value) buf += dec.decode(value, { stream: true });
+          buf = buf.replace(/\r\n/g, "\n");
+          let i;
+          while ((i = buf.indexOf("\n\n")) !== -1) {
+            const out = handle(parseBlock(buf.slice(0, i)));
+            buf = buf.slice(i + 2);
+            if (out) return out.value;
+          }
+          if (done) break;
+        }
+      } finally { try { rd.cancel(); } catch {} }
+      if (buf.trim()) {
+        const out = handle(parseBlock(buf));
+        if (out) return out.value;
+      }
+      throw new Error("Stream ended without a result");
+    }
+    const text = (await r.text()).replace(/\r\n/g, "\n");
+    for (const block of text.split("\n\n")) {
+      if (!block.trim()) continue;
+      const out = handle(parseBlock(block));
+      if (out) return out.value;
+    }
+    throw new Error("Stream ended without a result");
+  };
+  return withTimeout(run(), ms, "Scrape");
+}
+
+let hlsReady = null;
+function loadHls() {
+  if (window.Hls) return Promise.resolve(window.Hls);
+  return (hlsReady ||= (async () => {
+    const urls = ["https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js", "https://fastly.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"];
+    const inject = (src) => new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = res;
+      s.onerror = () => rej(new Error("script failed"));
+      document.head.append(s);
+    });
+    for (const u of urls) {
+      try {
+        const r = await px(u, { headers: { accept: "*/*" } }, 60000);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const code = await r.text();
+        await inject(URL.createObjectURL(new Blob([code], { type: "text/javascript" })));
+        if (window.Hls) return window.Hls;
+      } catch {}
+    }
+    for (const u of urls) {
+      try { await inject(u); if (window.Hls) return window.Hls; } catch {}
+    }
+    throw new Error("Could not load the HLS library");
+  })().catch((e) => { hlsReady = null; throw e; }));
+}
+
+function makeLoader(extra) {
+  return class ProxyLoader {
+    constructor() {
+      this.stats = { aborted: false, loaded: 0, retry: 0, total: 0, chunkCount: 0, bwEstimate: 0, loading: { start: 0, first: 0, end: 0 }, parsing: { start: 0, end: 0 }, buffering: { start: 0, first: 0, end: 0 } };
+      this.dead = false;
+    }
+    destroy() { this.dead = true; }
+    abort() { this.dead = true; this.stats.aborted = true; }
+    getCacheAge() { return null; }
+    getResponseHeader() { return null; }
+    load(context, config, callbacks) {
+      const st = this.stats;
+      st.loading.start = performance.now();
+      const headers = { accept: "*/*", ...(context.headers || {}), ...extra };
+      if (context.rangeStart != null && context.rangeEnd != null) headers.Range = "bytes=" + context.rangeStart + "-" + (context.rangeEnd - 1);
+      const asText = context.responseType === "text" || context.responseType === "json";
+      (async () => {
+        const r = await px(context.url, { headers }, 45000);
+        if (this.dead) return;
+        if (!r.ok) {
+          callbacks.onError({ code: r.status, text: "HTTP " + r.status }, context, r, st);
+          return;
+        }
+        st.loading.first = performance.now();
+        const data = asText ? await r.text() : await r.arrayBuffer();
+        if (this.dead) return;
+        st.loading.end = performance.now();
+        st.loaded = st.total = asText ? data.length : data.byteLength;
+        callbacks.onSuccess({ url: r.url || context.url, data }, st, context, r);
+      })().catch((e) => {
+        if (!this.dead) callbacks.onError({ code: 0, text: msgOf(e) }, context, null, st);
+      });
+    }
+  };
+}
+
+function stopPlayer() {
+  if (player.hls) { try { player.hls.destroy(); } catch {} player.hls = null; }
+  const v = player.video;
+  if (v) {
+    try {
+      v.onerror = null;
+      v.pause();
+      v.querySelectorAll("track").forEach((t) => t.remove());
+      v.removeAttribute("src");
+      v.load();
+    } catch {}
+  }
+}
+
+async function blobFallback(url, headers) {
+  player.note("Direct playback failed, buffering through the proxy…");
+  const r = await px(url, { headers: { accept: "*/*", ...headers } }, 60000);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const hd = (k) => (r.headers && r.headers.get ? r.headers.get(k) : null);
+  const total = Number(hd("content-length")) || 0;
+  const ct = hd("content-type") || "";
+  const type = /^video\//.test(ct) ? ct : "video/mp4";
+  const LIMIT = 1.5e9;
+  if (total > LIMIT) throw new Error("file is too large to buffer in the browser");
+  if (!r.body || !r.body.getReader) return URL.createObjectURL(await r.blob());
+  const rd = r.body.getReader();
+  const parts = [];
+  let got = 0;
+  for (;;) {
+    const { value, done } = await rd.read();
+    if (done) break;
+    parts.push(value);
+    got += value.length;
+    if (got > LIMIT) { rd.cancel(); throw new Error("file is too large to buffer in the browser"); }
+    player.note("Buffering " + Math.round(got / 1048576) + (total ? " / " + Math.round(total / 1048576) : "") + " MB through the proxy…");
+  }
+  return URL.createObjectURL(new Blob(parts, { type }));
+}
+
+async function playUrl(url, kind, headers = {}) {
+  const v = player.video;
+  stopPlayer();
+  const isHls = kind === "hls" || /\.m3u8(\?|$)/i.test(url);
+  if (isHls) {
+    const Hls = await loadHls();
+    if (Hls.isSupported()) {
+      const hls = new Hls({ loader: makeLoader(headers), maxBufferLength: 30 });
+      player.hls = hls;
+      hls.on(Hls.Events.ERROR, (_, e) => {
+        if (e.fatal) player.note("Playback error: " + e.type + " / " + e.details, true);
+      });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); });
+      hls.loadSource(url);
+      hls.attachMedia(v);
+      return;
+    }
+  }
+  v.src = url;
+  if (!isHls) {
+    v.onerror = () => {
+      v.onerror = null;
+      blobFallback(url, headers)
+        .then((b) => { v.src = b; v.play().catch(() => {}); player.note("Playing"); })
+        .catch((e) => player.note("Playback failed: " + msgOf(e), true));
+    };
+  }
+  v.play().catch(() => {});
+}
+
+async function captionUrl(c) {
+  const r = await px(c.url, { headers: { accept: "*/*" } }, 30000);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  let t = await r.text();
+  if (!/^\s*WEBVTT/.test(t)) t = "WEBVTT\n\n" + t.replace(/\r+/g, "").replace(/(\d+:\d+:\d+),(\d+)/g, "$1.$2");
+  return URL.createObjectURL(new Blob([t], { type: "text/vtt" }));
+}
+
+function setSubs(list) {
+  const sel = player.ui.subs;
+  player.caps = Array.isArray(list) ? list.filter((c) => c && c.url) : [];
+  sel.replaceChildren(new Option("Subtitles off", ""));
+  player.caps.forEach((c, i) => sel.append(new Option(c.language || c.id || "Track " + (i + 1), String(i))));
+  sel.disabled = player.caps.length === 0;
+}
+
+async function applySub(i) {
+  const v = player.video;
+  v.querySelectorAll("track").forEach((t) => t.remove());
+  if (i === "") return;
+  const c = player.caps[Number(i)];
+  try {
+    const u = await captionUrl(c);
+    const t = document.createElement("track");
+    t.kind = "subtitles";
+    t.label = c.language || "Subtitles";
+    t.srclang = c.language || "en";
+    t.src = u;
+    t.default = true;
+    v.append(t);
+    setTimeout(() => { if (t.track) t.track.mode = "showing"; }, 150);
+  } catch (e) {
+    player.note("Subtitles: " + msgOf(e), true);
+  }
+}
+
+async function playStream(st, label) {
+  if (!st) throw new Error("Empty stream");
+  const { quality, now } = player.ui;
+  quality.replaceChildren();
+  quality.disabled = true;
+  player.quals = null;
+  setSubs(st.captions);
+  const headers = { ...(st.preferredHeaders || {}), ...(st.headers || {}) };
+  player.qHeaders = headers;
+  if (st.type === "hls") {
+    await playUrl(st.playlist, "hls", headers);
+  } else if (st.type === "file") {
+    const keys = Object.keys(st.qualities || {}).filter((k) => st.qualities[k] && st.qualities[k].url).sort((a, b) => QORDER(b) - QORDER(a));
+    if (!keys.length) throw new Error("No playable qualities");
+    player.quals = st.qualities;
+    keys.forEach((k) => quality.append(new Option(k === "unknown" ? "Auto" : k, k)));
+    quality.disabled = keys.length < 2;
+    quality.value = keys[0];
+    await playUrl(st.qualities[keys[0]].url, "file", headers);
+  } else {
+    throw new Error("Unrecognized stream type: " + st.type);
+  }
+  now.textContent = label;
+  player.note("Playing " + label);
+}
+
+const setParams = (url, o) => {
+  for (const [k, v] of Object.entries(o)) if (v) url.searchParams.set(k, v);
+  return url;
+};
+
+let metaPromise = null, metaFor = "";
+function sourceMeta() {
+  const base = backendBase();
+  if (metaPromise && metaFor === base) return metaPromise;
+  metaFor = base;
+  metaPromise = pxJson(base + "/metadata", { headers: { accept: "application/json" } }, 30000).catch((e) => { metaPromise = null; throw e; });
+  return metaPromise;
+}
+
+async function listSources(type) {
+  const all = await sourceMeta();
+  const flat = (Array.isArray(all) ? all.flat(3) : []).filter((m) => m && m.id);
+  const typed = flat.some((m) => m.type);
+  const want = type === "movie" ? "movie" : "show";
+  return flat
+    .filter((m) => (!typed || m.type === "source") && (!Array.isArray(m.mediaTypes) || m.mediaTypes.includes(want)))
+    .sort((a, b) => (b.rank || 0) - (a.rank || 0));
+}
+
+async function startPlayer(type, d, stage) {
+  stopPlayer();
+  const note = h("div", { class: "pnote" }, "");
+  player.note = (t, err) => { note.textContent = t; note.className = "pnote" + (err ? " err" : ""); };
+  const video = h("video", { class: "mvideo", controls: "", playsinline: "" });
+  player.video = video;
+  const now = h("div", { class: "pnow" }, "");
+  const quality = h("select", { class: "psel", disabled: "" });
+  const subs = h("select", { class: "psel", disabled: "" });
+  subs.append(new Option("Subtitles off", ""));
+  player.ui = { quality, subs, now };
+  subs.onchange = () => applySub(subs.value);
+  quality.onchange = () => {
+    const k = quality.value;
+    if (!player.quals || !player.quals[k]) return;
+    const t = video.currentTime;
+    playUrl(player.quals[k].url, "file", player.qHeaders);
+    video.addEventListener("loadedmetadata", () => { video.currentTime = t; }, { once: true });
+  };
+  const chipBtn = (label, fn) => h("button", { class: "pchip", type: "button", onclick: fn }, label);
+  const seasonSel = h("select", { class: "psel" });
+  const epSel = h("select", { class: "psel", disabled: "" });
+  const femBox = h("div", { class: "plist" });
+  const srcBox = h("div", { class: "plist" }, h("span", { class: "pnote" }, "Loading sources…"));
+  const embedBox = h("div", { class: "plist" });
+  const embedHead = h("div", { class: "phead", style: "display:none" }, "Embeds");
+  const autoBtn = h("button", { class: "pchip", type: "button", disabled: "" }, "Try all sources");
+  let seasonData = null;
+  const year = String(d.release_date || d.first_air_date || "").slice(0, 4);
+  const imdb = d.imdb_id || (d.external_ids && d.external_ids.imdb_id) || "";
+
+  const getMedia = () => {
+    if (type === "movie") return { type: "movie", title: d.title || "", releaseYear: year, imdbId: imdb, tmdbId: String(d.id) };
+    const ep = seasonData && (seasonData.episodes || []).find((e) => String(e.episode_number) === epSel.value);
+    if (!ep) throw new Error("Pick a season and episode first");
+    return {
+      type: "show",
+      title: d.name || "",
+      releaseYear: year,
+      imdbId: imdb,
+      tmdbId: String(d.id),
+      seasonNumber: String(seasonData.season_number),
+      seasonTmdbId: String(seasonData.id),
+      episodeNumber: String(ep.episode_number),
+      episodeTmdbId: String(ep.id),
+    };
+  };
+
+  const loadSeason = async (n) => {
+    epSel.replaceChildren();
+    epSel.disabled = true;
+    try {
+      seasonData = await tmdb(`/tv/${d.id}/season/${n}`);
+      (seasonData.episodes || []).forEach((e) => epSel.append(new Option(("E" + e.episode_number + " " + (e.name || "")).trim(), String(e.episode_number))));
+      epSel.disabled = false;
+    } catch (e) {
+      player.note("Episodes: " + msgOf(e), true);
+    }
+  };
+  seasonSel.onchange = () => loadSeason(seasonSel.value);
+
+  const showEmbeds = (embeds, name) => {
+    embedBox.replaceChildren();
+    embedHead.style.display = embeds.length ? "block" : "none";
+    embedHead.textContent = "Embeds from " + name;
+    embeds.forEach((em) => {
+      const b = chipBtn(em.embedId, () => runEmbed(em, name, b));
+      embedBox.append(b);
+    });
+  };
+
+  const runEmbed = async (em, name, btn) => {
+    btn.className = "pchip run";
+    player.note("Scraping embed " + em.embedId + "…");
+    try {
+      const url = setParams(new URL(backendBase() + "/scrape/embed"), { id: em.embedId, url: em.url });
+      const r = await pxSse(url.toString());
+      const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
+      if (!st) throw new Error("no stream from " + em.embedId);
+      await playStream(st, name + " → " + em.embedId);
+      btn.className = "pchip ok";
+    } catch (e) {
+      btn.className = "pchip bad";
+      player.note(em.embedId + ": " + msgOf(e), true);
+    }
+  };
+
+  const runSource = async (s, btn) => {
+    btn.className = "pchip run";
+    embedBox.replaceChildren();
+    embedHead.style.display = "none";
+    const name = s.name || s.id;
+    player.note("Scraping " + name + "…");
+    try {
+      const url = setParams(new URL(backendBase() + "/scrape/source"), { ...getMedia(), id: s.id });
+      const r = await pxSse(url.toString());
+      if (!r) throw new Error("no output");
+      const st = Array.isArray(r.stream) ? r.stream[0] : r.stream;
+      if (st) {
+        await playStream(st, name);
+        btn.className = "pchip ok";
+        return;
+      }
+      const embeds = Array.isArray(r.embeds) ? r.embeds : [];
+      if (!embeds.length) throw new Error("no streams or embeds");
+      btn.className = "pchip ok";
+      showEmbeds(embeds, name);
+      if (embeds.length === 1) runEmbed(embeds[0], name, embedBox.firstChild);
+    } catch (e) {
+      btn.className = "pchip bad";
+      player.note(name + ": " + msgOf(e), true);
+    }
+  };
+
+  autoBtn.onclick = async () => {
+    autoBtn.disabled = true;
+    player.note("Trying all sources…");
+    try {
+      const url = setParams(new URL(backendBase() + "/scrape"), getMedia());
+      const r = await pxSse(url.toString(), (n, v) => {
+        if (n !== "update" || !v || !v.id) return;
+        const c = srcBox.querySelector(`[data-id="${CSS.escape(v.id)}"]`);
+        if (c) c.className = "pchip " + (v.status === "success" ? "ok" : v.status === "failure" || v.status === "notfound" ? "bad" : "run");
+        player.note(v.id + ": " + (v.status || "working"));
+      }, 180000);
+      const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
+      if (!st) throw new Error("no source produced a stream");
+      await playStream(st, [r.sourceId, r.embedId].filter(Boolean).join(" → ") || "Auto");
+    } catch (e) {
+      player.note("Auto: " + msgOf(e), true);
+    } finally {
+      autoBtn.disabled = false;
+    }
+  };
+
+  const loadFem = async () => {
+    femBox.replaceChildren();
+    if (!febToken) {
+      const b = chipBtn("Set Febbox token", async () => {
+        await promptFebbox(b);
+        if (febToken) loadFem();
+      });
+      femBox.append(b);
+      return;
+    }
+    femBox.append(h("span", { class: "pnote" }, "Fetching…"));
+    try {
+      const list = await febboxStreams(d.id);
+      femBox.replaceChildren();
+      let any = false;
+      list.forEach((l, i) => {
+        const url = typeof l === "string" ? l : l && (l.url || l.link || l.file || l.src || l.stream || l.playlist);
+        if (!url) return;
+        any = true;
+        const label = typeof l === "string" ? "" : [l.quality, l.label, l.name, l.resolution, l.size].filter((x) => x != null && x !== "").map(String).join(" · ");
+        const b = chipBtn(label || "Link " + (i + 1), async () => {
+          femBox.querySelectorAll(".pchip").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          quality.replaceChildren();
+          quality.disabled = true;
+          player.quals = null;
+          setSubs(l && l.subtitles);
+          try {
+            await playUrl(url, /\.m3u8(\?|$)/i.test(url) ? "hls" : "file", {});
+            now.textContent = "FEM · " + b.textContent;
+            player.note("Playing FEM " + b.textContent);
+          } catch (e) {
+            player.note("FEM: " + msgOf(e), true);
+          }
+        });
+        femBox.append(b);
+      });
+      if (!any) femBox.append(h("span", { class: "pnote err" }, "Unrecognized Febbox response: " + JSON.stringify(list[0] === undefined ? null : list[0]).slice(0, 300)));
+    } catch (e) {
+      femBox.replaceChildren(h("span", { class: "pnote err" }, msgOf(e)));
+    }
+  };
+
+  const controls = h("div", { class: "pbar" });
+  if (type === "tv") controls.append(seasonSel, epSel);
+  controls.append(quality, subs);
+  stage.replaceChildren(
+    video,
+    now,
+    controls,
+    note,
+    ...(type === "movie" ? [h("div", { class: "phead" }, "Febbox (FEM)"), femBox] : []),
+    h("div", { class: "phead" }, "Sources"),
+    h("div", { class: "pbar" }, autoBtn),
+    srcBox,
+    embedHead,
+    embedBox,
+  );
+  stage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  player.note("Ready. Pick a source below, or try all sources.");
+
+  if (type === "movie") loadFem();
+
+  if (type === "tv") {
+    const all = d.seasons || [];
+    const seasons = all.filter((s) => s.season_number > 0 && s.episode_count > 0);
+    (seasons.length ? seasons : all).forEach((s) => seasonSel.append(new Option("Season " + s.season_number, String(s.season_number))));
+    if (seasonSel.value !== "") await loadSeason(seasonSel.value);
+  }
+
+  try {
+    const list = await listSources(type);
+    srcBox.replaceChildren();
+    if (!list.length) {
+      srcBox.append(h("span", { class: "pnote err" }, "The backend returned no sources."));
+      return;
+    }
+    list.forEach((s) => {
+      const b = chipBtn(s.name || s.id, () => runSource(s, b));
+      b.dataset.id = s.id;
+      srcBox.append(b);
+    });
+    autoBtn.disabled = false;
+  } catch (e) {
+    srcBox.replaceChildren(h("span", { class: "pnote err" }, "Could not list sources: " + msgOf(e)));
+  }
+}
+
 function closeModal() {
+  stopPlayer();
+  player.video = null;
   $("modal").hidden = true;
   document.body.classList.remove("lock");
   $("modal-box").replaceChildren();
 }
 
-async function openDetails(type, id) {
+async function openDetails(type, id, autoplay) {
   const box = $("modal-box");
   $("modal").hidden = false;
   document.body.classList.add("lock");
   const close = h("button", { class: "mclose", type: "button", "aria-label": "Close", onclick: closeModal }, "✕");
   box.replaceChildren(close, h("div", { class: "mload" }, "Loading…"));
   try {
-    const d = await tmdb(`/${type}/${id}`, { append_to_response: "credits" });
+    const d = await tmdb(`/${type}/${id}`, { append_to_response: "credits,external_ids" });
+    const stage = h("div", { class: "mstage" });
     const title = d.title || d.name || "";
     const year = String(d.release_date || d.first_air_date || "").slice(0, 4);
     const length = type === "movie"
@@ -933,7 +1472,9 @@ async function openDetails(type, id) {
           h("div", { class: "genres" }, ...(d.genres || []).map((g) => h("span", {}, g.name))),
           d.overview ? h("p", {}, d.overview) : null,
           cast ? h("div", { class: "cast" }, h("b", {}, "Cast: "), cast) : null,
-          h("div", { class: "btns" }, h("button", { class: "btn", type: "button", disabled: "" }, "▶ Playback coming soon")))));
+          h("div", { class: "btns" }, h("button", { class: "btn", type: "button", onclick: () => startPlayer(type, d, stage) }, "▶ Play")))),
+      stage);
+    if (autoplay) startPlayer(type, d, stage);
   } catch (e) {
     box.replaceChildren(close, h("div", { class: "mload" }, "Could not load details: " + msgOf(e)));
   }
@@ -977,5 +1518,4 @@ $("swap").onclick = switchProxy;
 $("swapbtn").onclick = switchProxy;
 begin();
 </script>
-</body>
-</html>
+</body></html>
