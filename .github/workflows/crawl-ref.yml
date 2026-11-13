@@ -9,6 +9,12 @@ on:
       extra_origins:
         description: "Comma-separated extra origins to follow"
         default: ""
+      probe_origins:
+        description: "Comma-separated extra backend origins to probe (found ones are probed automatically)"
+        default: ""
+      workers:
+        description: "Parallel requests"
+        default: "8"
       max_files:
         description: "Max files to crawl"
         default: "2000"
@@ -32,11 +38,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Crawl page into ref/
+      - name: Crawl page into ref/ (aether.cx headers, request discovery, backend probes)
         env:
           CRAWL_URL: ${{ inputs.url || 'https://aether.cx' }}
           MAX_FILES: ${{ inputs.max_files || '2000' }}
           EXTRA_ORIGINS: ${{ inputs.extra_origins }}
+          PROBE_ORIGINS: ${{ inputs.probe_origins }}
+          WORKERS: ${{ inputs.workers || '8' }}
         run: |
           python scripts/crawl_ref.py
 
