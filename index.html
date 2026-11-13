@@ -98,6 +98,12 @@ footer button{text-decoration:underline;color:var(--dim)}
 .minfo p{color:#d6d0ea}
 .cast{color:var(--dim);font-size:.88rem}
 .cast b{color:var(--ink)}
+.freebadge{position:absolute;top:8px;left:8px;z-index:2;font-size:.68rem;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:999px;background:var(--acc);color:#14102a}
+.mstage{padding:0 clamp(18px,3vw,32px) 28px;display:flex;flex-direction:column;gap:10px}
+.mstage:empty{display:none}
+.mvideo{width:100%;max-height:70vh;background:#000;border-radius:12px}
+.pnote{color:var(--dim);font-size:.9rem}
+.pnote.err{color:var(--danger)}
 @media (max-width:560px){.mbody{flex-direction:column;margin-top:-50px}.minfo{padding-top:0}.mposter{width:110px}}
 @media (prefers-reduced-motion:reduce){.spin,.poster{animation:none}.hero-bg{transition:none}}
 </style>
@@ -578,6 +584,10 @@ const trim = (r, type) => ({
   overview: r.overview || "",
 });
 
+const PLAY_MAX_YEAR = 1950;
+const playableYear = (y) => /^\d{4}$/.test(String(y || "")) && Number(y) <= PLAY_MAX_YEAR;
+const playable = (it) => playableYear(it.year);
+
 const listOf = (type, path, params = {}, pages = 1) =>
   cached(`all:${type}:${path}:${JSON.stringify(params)}:${pages}`, 30 * 60000, async () => {
     const ds = await Promise.all(Array.from({ length: pages }, (_, i) => tmdb(path, { ...params, page: String(i + 1) })));
@@ -631,7 +641,7 @@ function card(it) {
   imgIO.observe(img);
   const sub = [it.year, it.vote ? "★ " + it.vote.toFixed(1) : ""].filter(Boolean).join(" · ");
   return h("button", { class: "card", type: "button", title: it.title, onclick: () => openDetails(it.type, it.id) },
-    h("div", { class: "poster" }, img),
+    h("div", { class: "poster" }, img, playable(it) ? h("span", { class: "freebadge" }, "Free") : null),
     h("div", { class: "t" }, it.title),
     sub ? h("div", { class: "s" }, sub) : null);
 }
