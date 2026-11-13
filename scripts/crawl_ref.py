@@ -257,13 +257,13 @@ def backend_origins(reqs):
                     out.add(f"{p.scheme}://{p.netloc}")
     for u in reqs["urls"]:
         p = urllib.parse.urlparse(u)
-        if any(w in p.netloc for w in ("backend", "api.", "scrape")) and not any(n in p.netloc for n in NOISE_HOSTS):
+        if any(w in p.netloc for w in ("backend", "scrape")) and not any(n in p.netloc for n in NOISE_HOSTS):
             out.add(f"{p.scheme}://{p.netloc}")
     return sorted(out)
 
 def run_probes(reqs):
     origins = backend_origins(reqs)
-    routes = sorted(reqs["routes"], key=lambda r: -reqs["routes"][r])[:40]
+    routes = sorted(reqs["routes"], key=lambda r: -reqs["routes"][r])[:8]
     paths = list(dict.fromkeys(PROBE_PATHS + routes))
     jobs = [(o, p) for o in origins for p in paths]
     print(f"probing {len(origins)} origin(s) x {len(paths)} path(s)")
