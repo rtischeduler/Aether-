@@ -1124,9 +1124,31 @@ const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).rep
 // The backend 403s requests that do not look like they came from aether.cx, so send the same Origin/Referer/UA the real site does.
 const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent": navigator.userAgent });
 
+// Same as the ref: go through the CORS proxy (?destination=) and have it forward X-Origin/X-Referer as Origin/Referer. libcurl is the last resort.
+const BACKEND_PROXIES = ["https://just.raccoonunbutteredbagel.zip", "https://justice.raccoonunbutteredbagel.zip"];
+let proxyPick = 0;
+async function backendFetch(url, accept = "text/event-stream") {
+  const errs = [];
+  for (let i = 0; i < BACKEND_PROXIES.length; i++) {
+    const idx = (proxyPick + i) % BACKEND_PROXIES.length, p = BACKEND_PROXIES[idx];
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
+    try {
+      const r = await fetch(p + "/?destination=" + encodeURIComponent(url), { headers: { accept, "X-Origin": SITE, "X-Referer": SITE + "/" }, signal: ctl.signal });
+      clearTimeout(timer);
+      if (r.ok) { proxyPick = idx; return r; }
+      errs.push("HTTP " + r.status + " via " + p.replace("https://", ""));
+    } catch (e) { clearTimeout(timer); errs.push(msgOf(e) + " via " + p.replace("https://", "")); }
+  }
+  try {
+    const r = await px(url, { headers: { accept, ...backendHeaders() } }, 30000);
+    if (r.ok) return r;
+    errs.push("HTTP " + r.status + " via libcurl");
+  } catch (e) { errs.push(msgOf(e) + " via libcurl"); }
+  throw new Error("Backend: " + errs.join("; "));
+}
+
 async function pxSse(url, onUpdate, ms = 90000) {
-  const r = await px(url, { headers: { accept: "text/event-stream", ...backendHeaders() } }, 30000);
-  if (!r.ok) throw new Error("Backend HTTP " + r.status);
+  const r = await backendFetch(url);
   const parseBlock = (block) => {
     let name = "message";
     const data = [];
@@ -1185,7 +1207,7 @@ const viaBackend = (path, params, onUpdate, ms) => pxSse(setParams(new URL(backe
 // Backend first; the in-page library only runs if the backend itself is unreachable/erroring (a plain "not found" is final).
 async function backendOr(note, backendFn, libFn) {
   try { return await backendFn(); }
-  catch (e) { log("[scrape] backend failed (" + msgOf(e) + "), using in-page library"); note && note("Backend unavailable, trying in-page library…"); return libFn(); }
+  catch (e) { log("[scrape] backend failed (" + msgOf(e) + "), using in-page library"); note && note(msgOf(e) + " — trying in-page library…", true); return libFn(); }
 }
 
 // Aether's own scraper: the providers library from Aether's vendor chunk (crawled into ref/), run in this page.
