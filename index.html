@@ -1124,26 +1124,25 @@ const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).rep
 // The backend 403s requests that do not look like they came from aether.cx, so send the same Origin/Referer/UA the real site does.
 const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent": navigator.userAgent });
 
-// Same as the ref: go through the CORS proxy (?destination=) and have it forward X-Origin/X-Referer as Origin/Referer. libcurl is the last resort.
+// Same as the ref: CORS proxy (?destination=) with X-Origin/X-Referer forwarded as Origin/Referer. The proxy call itself goes through libcurl
+// (a browser fetch would be blocked by CORS: those custom headers force a preflight). Direct libcurl to the backend is the last resort.
 const BACKEND_PROXIES = ["https://just.raccoonunbutteredbagel.zip", "https://justice.raccoonunbutteredbagel.zip"];
 let proxyPick = 0;
 async function backendFetch(url, accept = "text/event-stream") {
   const errs = [];
   for (let i = 0; i < BACKEND_PROXIES.length; i++) {
-    const idx = (proxyPick + i) % BACKEND_PROXIES.length, p = BACKEND_PROXIES[idx];
-    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
+    const idx = (proxyPick + i) % BACKEND_PROXIES.length, p = BACKEND_PROXIES[idx], tag = p.replace("https://", "");
     try {
-      const r = await fetch(p + "/?destination=" + encodeURIComponent(url), { headers: { accept, "X-Origin": SITE, "X-Referer": SITE + "/" }, signal: ctl.signal });
-      clearTimeout(timer);
+      const r = await px(p + "/?destination=" + encodeURIComponent(url), { headers: { accept, "X-Origin": SITE, "X-Referer": SITE + "/", "user-agent": navigator.userAgent } }, 30000);
       if (r.ok) { proxyPick = idx; return r; }
-      errs.push("HTTP " + r.status + " via " + p.replace("https://", ""));
-    } catch (e) { clearTimeout(timer); errs.push(msgOf(e) + " via " + p.replace("https://", "")); }
+      errs.push("HTTP " + r.status + " via " + tag);
+    } catch (e) { errs.push(msgOf(e) + " via " + tag); }
   }
   try {
     const r = await px(url, { headers: { accept, ...backendHeaders() } }, 30000);
     if (r.ok) return r;
-    errs.push("HTTP " + r.status + " via libcurl");
-  } catch (e) { errs.push(msgOf(e) + " via libcurl"); }
+    errs.push("HTTP " + r.status + " direct");
+  } catch (e) { errs.push(msgOf(e) + " direct"); }
   throw new Error("Backend: " + errs.join("; "));
 }
 
