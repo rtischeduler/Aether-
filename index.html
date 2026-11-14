@@ -1118,6 +1118,76 @@ const setParams = (url, o) => {
 };
 
 
+// Primary path, like the ref: the scrape backend runs server-side (its own IP, so Cloudflare lets it through); we only add aether.cx headers via the proxy.
+const BACKEND_DEFAULT = "https://backend.raccoonunbutteredbagel.zip";
+const backendBase = () => String(store.get("AE_BACKEND") || BACKEND_DEFAULT).replace(/\/+$/, "");
+// The backend 403s requests that do not look like they came from aether.cx, so send the same Origin/Referer/UA the real site does.
+const backendHeaders = () => ({ origin: SITE, referer: SITE + "/", "user-agent": navigator.userAgent });
+
+async function pxSse(url, onUpdate, ms = 90000) {
+  const r = await px(url, { headers: { accept: "text/event-stream", ...backendHeaders() } }, 30000);
+  if (!r.ok) throw new Error("Backend HTTP " + r.status);
+  const parseBlock = (block) => {
+    let name = "message";
+    const data = [];
+    for (const line of block.split("\n")) {
+      if (line.startsWith("event:")) name = line.slice(6).trim();
+      else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
+    }
+    let v = {};
+    try { v = data.length ? JSON.parse(data.join("\n")) : {}; } catch {}
+    return { name, v, hasData: data.length > 0 };
+  };
+  const handle = (b) => {
+    if (b.name === "completed") return { value: b.v };
+    if (b.name === "noOutput") return { value: null };
+    if (b.name === "error") throw new Error(b.hasData ? b.v.message || b.v.name || "scrape error" : "Scrape backend error");
+    if (onUpdate && (b.name === "update" || b.name === "start" || b.name === "init")) onUpdate(b.name, b.v);
+    return null;
+  };
+  const run = async () => {
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      try {
+        for (;;) {
+          const { value, done } = await rd.read();
+          if (value) buf += dec.decode(value, { stream: true });
+          buf = buf.replace(/\r\n/g, "\n");
+          let i;
+          while ((i = buf.indexOf("\n\n")) !== -1) {
+            const out = handle(parseBlock(buf.slice(0, i)));
+            buf = buf.slice(i + 2);
+            if (out) return out.value;
+          }
+          if (done) break;
+        }
+      } finally { try { rd.cancel(); } catch {} }
+      if (buf.trim()) {
+        const out = handle(parseBlock(buf));
+        if (out) return out.value;
+      }
+      throw new Error("Stream ended without a result");
+    }
+    const text = (await r.text()).replace(/\r\n/g, "\n");
+    for (const block of text.split("\n\n")) {
+      if (!block.trim()) continue;
+      const out = handle(parseBlock(block));
+      if (out) return out.value;
+    }
+    throw new Error("Stream ended without a result");
+  };
+  return withTimeout(run(), ms, "Scrape");
+}
+
+const viaBackend = (path, params, onUpdate, ms) => pxSse(setParams(new URL(backendBase() + path), params).toString(), onUpdate, ms);
+// Backend first; the in-page library only runs if the backend itself is unreachable/erroring (a plain "not found" is final).
+async function backendOr(note, backendFn, libFn) {
+  try { return await backendFn(); }
+  catch (e) { log("[scrape] backend failed (" + msgOf(e) + "), using in-page library"); note && note("Backend unavailable, trying in-page library…"); return libFn(); }
+}
+
 // Aether's own scraper: the providers library from Aether's vendor chunk (crawled into ref/), run in this page.
 // Requests go through the libcurl/wisp proxy above (unrestricted headers), so the NATIVE target applies.
 const REF_BASES = [new URL("ref/aether.cx/", location.href).href, "https://cdn.jsdelivr.net/gh/rtischeduler/Aether-@main/ref/aether.cx/"];
@@ -1239,8 +1309,9 @@ async function startPlayer(type, d, stage) {
     btn.className = "pchip run";
     player.note("Scraping embed " + em.embedId + "…");
     try {
-      const P = await getProviders();
-      const r = await P.runEmbedScraper({ id: em.embedId, url: em.url });
+      const r = await backendOr(player.note,
+        () => viaBackend("/scrape/embed", { id: em.embedId, url: em.url }),
+        async () => (await getProviders()).runEmbedScraper({ id: em.embedId, url: em.url }));
       const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
       if (!st) throw new Error("no stream from " + em.embedId);
       await playStream(st, name + " → " + em.embedId);
@@ -1258,8 +1329,9 @@ async function startPlayer(type, d, stage) {
     const name = s.name || s.id;
     player.note("Scraping " + name + "…");
     try {
-      const P = await getProviders();
-      const r = await P.runSourceScraper({ id: s.id, media: toLibMedia(getMedia()) });
+      const r = await backendOr(player.note,
+        () => viaBackend("/scrape/source", { ...getMedia(), id: s.id }),
+        async () => (await getProviders()).runSourceScraper({ id: s.id, media: toLibMedia(getMedia()) }));
       if (!r) throw new Error("no output");
       const st = Array.isArray(r.stream) ? r.stream[0] : r.stream;
       if (st) {
@@ -1282,13 +1354,15 @@ async function startPlayer(type, d, stage) {
     autoBtn.disabled = true;
     player.note("Trying all sources…");
     try {
-      const P = await getProviders();
-      const r = await P.runAll({ media: toLibMedia(getMedia()), events: { update: (v) => ((n, v) => {
+      const onUpdate = (n, v) => {
         if (n !== "update" || !v || !v.id) return;
         const c = srcBox.querySelector(`[data-id="${CSS.escape(v.id)}"]`);
         if (c) c.className = "pchip " + (v.status === "success" ? "ok" : v.status === "failure" || v.status === "notfound" ? "bad" : "run");
         player.note(v.id + ": " + (v.status || "working"));
-      })("update", v) } });
+      };
+      const r = await backendOr(player.note,
+        () => viaBackend("/scrape", getMedia(), onUpdate, 180000),
+        async () => (await getProviders()).runAll({ media: toLibMedia(getMedia()), events: { update: (v) => onUpdate("update", v) } }));
       const st = r && (Array.isArray(r.stream) ? r.stream[0] : r.stream);
       if (!st) throw new Error("no source produced a stream");
       await playStream(st, [r.sourceId, r.embedId].filter(Boolean).join(" → ") || "Auto");
