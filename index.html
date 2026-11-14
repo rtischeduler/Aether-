@@ -982,6 +982,7 @@ function makeLoader(extra) {
 }
 
 function stopPlayer() {
+  player.tok = (player.tok || 0) + 1;
   if (player.hls) { try { player.hls.destroy(); } catch {} player.hls = null; }
   const v = player.video;
   if (v) {
@@ -1020,33 +1021,82 @@ async function blobFallback(url, headers) {
   return URL.createObjectURL(new Blob(parts, { type }));
 }
 
+// Same as the ref (its Od()): let the proxy stream the media as <proxy>/m3u8-proxy?url=&headers= so playback starts while it is still downloading.
+// libcurl (whole segment / whole file buffered in the page) is only the fallback.
+const STREAM_PROXIES = ["https://just.raccoonunbutteredbagel.zip", "https://justice.raccoonunbutteredbagel.zip"];
+const viaStreamProxy = (p, u, hd) => p + "/m3u8-proxy?url=" + encodeURIComponent(u) + (hd && Object.keys(hd).length ? "&headers=" + encodeURIComponent(JSON.stringify(hd)) : "");
+
+// Resolves as soon as the element has its first frame of data; the rest keeps downloading while it plays.
+function startVideo(v, src, ms) {
+  return new Promise((res, rej) => {
+    let timer;
+    const off = () => { clearTimeout(timer); v.removeEventListener("loadeddata", ok); v.removeEventListener("error", bad); };
+    const ok = () => { off(); res(); };
+    const bad = () => { off(); rej(new Error(v.error ? "media error " + v.error.code : "failed")); };
+    v.addEventListener("loadeddata", ok);
+    v.addEventListener("error", bad);
+    timer = setTimeout(() => { off(); rej(new Error("no data after " + ms / 1000 + "s")); }, ms);
+    v.src = src;
+    v.play().catch(() => {});
+  });
+}
+
+function startHls(Hls, v, src, loader) {
+  return new Promise((res, rej) => {
+    let done = false, timer;
+    const hls = new Hls({ ...(loader ? { loader } : {}), maxBufferLength: 30 });
+    const fail = (e) => {
+      if (done) return;
+      done = true; clearTimeout(timer);
+      try { hls.destroy(); } catch {}
+      if (player.hls === hls) player.hls = null;
+      rej(e);
+    };
+    timer = setTimeout(() => fail(new Error("no playlist after 20s")), 20000);
+    player.hls = hls;
+    hls.on(Hls.Events.MANIFEST_PARSED, () => { if (done) return; done = true; clearTimeout(timer); v.play().catch(() => {}); res(); });
+    hls.on(Hls.Events.ERROR, (_, e) => {
+      if (!e.fatal) return;
+      if (!done) fail(new Error(e.details || e.type));
+      else player.note("Playback error: " + e.type + " / " + e.details, true);
+    });
+    hls.loadSource(src);
+    hls.attachMedia(v);
+  });
+}
+
 async function playUrl(url, kind, headers = {}) {
   const v = player.video;
   stopPlayer();
+  const tok = player.tok, live = () => tok === player.tok;
   const isHls = kind === "hls" || /\.m3u8(\?|$)/i.test(url);
   if (isHls) {
     const Hls = await loadHls();
+    if (!live()) return;
     if (Hls.isSupported()) {
-      const hls = new Hls({ loader: makeLoader(headers), maxBufferLength: 30 });
-      player.hls = hls;
-      hls.on(Hls.Events.ERROR, (_, e) => {
-        if (e.fatal) player.note("Playback error: " + e.type + " / " + e.details, true);
-      });
-      hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); });
-      hls.loadSource(url);
-      hls.attachMedia(v);
-      return;
+      const tries = [...STREAM_PROXIES.map((p) => ["proxy", viaStreamProxy(p, url, headers), null]), ["libcurl", url, makeLoader(headers)]];
+      for (const [name, src, loader] of tries) {
+        player.note(name === "proxy" ? "Starting stream through the proxy…" : "Proxy streaming failed, loading segments through libcurl…");
+        try { await startHls(Hls, v, src, loader); return; } catch (e) { if (!live()) return; }
+      }
+      throw new Error("Could not start the HLS stream");
     }
   }
-  v.src = url;
-  if (!isHls) {
-    v.onerror = () => {
-      v.onerror = null;
-      blobFallback(url, headers)
-        .then((b) => { v.src = b; v.play().catch(() => {}); player.note("Playing"); })
-        .catch((e) => player.note("Playback failed: " + msgOf(e), true));
-    };
+  // Files (and native-HLS browsers): the element streams with Range requests, so it plays while downloading.
+  // Direct only works when no special headers are needed; then each proxy; whole-file buffering is the last resort.
+  const stages = [];
+  if (!Object.keys(headers).length) stages.push(["direct", url]);
+  STREAM_PROXIES.forEach((p) => stages.push(["through the proxy", viaStreamProxy(p, url, headers)]));
+  for (const [name, src] of stages) {
+    if (!live()) return;
+    player.note("Loading (" + name + ")…");
+    try { await startVideo(v, src, 20000); return; } catch {}
   }
+  if (isHls) throw new Error("Could not start the HLS stream");
+  if (!live()) return;
+  const blob = await blobFallback(url, headers);
+  if (!live()) return;
+  v.src = blob;
   v.play().catch(() => {});
 }
 
